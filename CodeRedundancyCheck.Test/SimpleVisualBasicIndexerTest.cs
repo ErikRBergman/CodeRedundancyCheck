@@ -60,8 +60,10 @@ namespace CodeRedundancyCheck.Test
         {
             var indexer = new CodeFileComparer(null);
 
-            var sourceFile = new CodeFile();
-            sourceFile.CodeLines = new List<CodeLine>(1000);
+            var sourceFile = new CodeFile
+            {
+                CodeLines = new List<CodeLine>(1000)
+            };
 
             int line = 0;
 
