@@ -11,27 +11,7 @@ namespace CodeRedundancyCheck
 {
     public class CodeFileComparer
     {
-        private readonly ISourceWash sourceWash;
-
         public List<ICodeLineFilter> CodeLineFilters { get; private set; } = new List<ICodeLineFilter>();
-
-        public CodeFileComparer(ISourceWash sourceWash)
-        {
-            this.sourceWash = sourceWash;
-        }
-
-        public CodeFile LoadFile(string filename)
-        {
-            var codeFile = new CodeFile
-            {
-                Filename = filename,
-                CodeLines = this.sourceWash.Wash(this.LoadFileData(filename)).ToList()
-            };
-
-            CodeFileIndexer.IndexCodeFile(codeFile);
-
-            return codeFile;
-        }
 
         public List<CodeMatch> GetMatches(int minimumMatchingLines, CodeFile firstCodeFile, params CodeFile[] codeFiles)
         {

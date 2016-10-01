@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeRedundancyCheck.Interface;
 using CodeRedundancyCheck.Model;
 
 namespace CodeRedundancyCheck
 {
-    public class CodeFileIndexer
+    public class CodeFileIndexer : ICodeFileIndexer
     {
-        public static void IndexCodeFile(CodeFile codeFile)
+        public void IndexCodeFile(CodeFile codeFile)
         {
             codeFile.CodeLinesDictionary = new Dictionary<string, List<CodeLine>>(codeFile.CodeLines.Count, StringComparer.OrdinalIgnoreCase);
 

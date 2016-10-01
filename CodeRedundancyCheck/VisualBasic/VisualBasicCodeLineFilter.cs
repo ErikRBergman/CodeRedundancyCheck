@@ -33,6 +33,18 @@ namespace CodeRedundancyCheck.VisualBasic
                 return false;
             }
 
+            // Not wend
+            if (string.Compare(codeLine.WashedLineText, "wend", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
+            if (string.Compare(codeLine.WashedLineText, "end with", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
+
             return true;
         }
     }

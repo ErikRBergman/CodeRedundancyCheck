@@ -12,4 +12,5 @@ namespace CodeRedundancyCheck
 
         public Dictionary<string, List<CodeLine>> CodeLinesDictionary { get; set; }
     }
+
 }
