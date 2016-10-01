@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeRedundancyCheck", "CodeRedundancyCheck\CodeRedundancyCheck.csproj", "{F0365803-8E33-49D3-8DA5-12DE5E4A874E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeRedundancyCheck.Test", "CodeRedundancyCheck.Test\CodeRedundancyCheck.Test.csproj", "{F0613BBD-578D-48EE-9532-B65D1F83E0CC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F0365803-8E33-49D3-8DA5-12DE5E4A874E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0365803-8E33-49D3-8DA5-12DE5E4A874E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0365803-8E33-49D3-8DA5-12DE5E4A874E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0365803-8E33-49D3-8DA5-12DE5E4A874E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0613BBD-578D-48EE-9532-B65D1F83E0CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0613BBD-578D-48EE-9532-B65D1F83E0CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0613BBD-578D-48EE-9532-B65D1F83E0CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0613BBD-578D-48EE-9532-B65D1F83E0CC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
