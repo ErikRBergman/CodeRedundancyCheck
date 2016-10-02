@@ -20,14 +20,13 @@ namespace CodeRedundancyCheck
             {
                 line.WashedLineText = this.WashLine(line.OriginalLineText);
 
-                // Remove empty and comment lines
-                if (line.WashedLineText.Length > 0 && line.WashedLineText[0] != '\'')
+                if (line.WashedLineText.Length == 0 || line.WashedLineText[0] == '\'')
                 {
-                    line.CodeFileLineIndex = lineNumber;
-                    lineNumber++;
-
-                    yield return line;
+                    line.IsCodeLine = false;
+                    line.CodeFileLineIndex = -1;
                 }
+
+                yield return line;
             }
         }
 

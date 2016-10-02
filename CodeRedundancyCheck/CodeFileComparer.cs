@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CodeRedundancyCheck.Extensions;
 using CodeRedundancyCheck.Interface;
 using CodeRedundancyCheck.Model;
 
@@ -62,7 +63,7 @@ namespace CodeRedundancyCheck
                             continue;
                         }
 
-                        if (MayStartBlock(sourceLine, sourceFile) == false)
+                        if (this.MayStartBlock(sourceLine, sourceFile) == false)
                         {
                             continue;
                         }
@@ -117,21 +118,24 @@ namespace CodeRedundancyCheck
 
                             if (matchingLineCount >= minimumMatchingLines)
                             {
-                                var compareLinesKey = compareFile.Filename + "_" + compareLines[0].CodeFileLineIndex + "_" + matchingLineCount;
-                                var sourceLinesKey = sourceFile.Filename + "_" + sourceLines[0].CodeFileLineIndex + "_" + matchingLineCount;
+                                var compareLinesKey = GetBlockKey(compareFile.Filename, compareLines, matchingLineCount);
+                                var sourceLinesKey = GetBlockKey(sourceFile.Filename, sourceLines, matchingLineCount);
 
-                                if (addedBlocks.Contains(compareLinesKey) == false || addedBlocks.Contains(sourceLinesKey) == false)
+                                if (addedBlocks.DoesNotContainAll(compareLinesKey, sourceLinesKey))
                                 {
-                                    addedBlocks.Add(sourceLinesKey);
-                                    addedBlocks.Add(compareLinesKey);
+                                    if (sourceLines[0].WashedLineText == "Dim Cause As Integer")
+                                    {
+                                        var xaxa = 1;
+                                    }
+
+                                    addedBlocks.AddMultiple(sourceLinesKey, compareLinesKey);
 
                                     //// Remove target blocks that are part of the added block
                                     for (int i = 1; i < matchingLineCount; i++)
                                     {
-                                        var compareLinesKeyTemp = compareFile.Filename + "_" + (compareLines[0].CodeFileLineIndex + i) + "_" + (matchingLineCount - i);
-                                        var sourceLinesKeyTemp = sourceFile.Filename + "_" + (sourceLines[0].CodeFileLineIndex + i) + "_" + (matchingLineCount - i);
-                                        addedBlocks.Add(compareLinesKeyTemp);
-                                        addedBlocks.Add(sourceLinesKeyTemp);
+                                        var compareLinesKeyTemp = GetBlockKey(compareFile.Filename, compareLines[0].CodeFileLineIndex + i, matchingLineCount - i);
+                                        var sourceLinesKeyTemp = GetBlockKey(sourceFile.Filename, sourceLines[0].CodeFileLineIndex + i, matchingLineCount - i);
+                                        addedBlocks.AddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp);
                                     }
 
                                     CodeMatch match;
@@ -157,6 +161,21 @@ namespace CodeRedundancyCheck
             }
 
             return result.Values.ToList();
+        }
+
+        private static string GetBlockKey(string filename, List<CodeLine> codeLines, int matchingLineCount)
+        {
+            return GetBlockKey(filename, codeLines[0], matchingLineCount);
+        }
+
+        private static string GetBlockKey(string filename, CodeLine codeLine, int matchingLineCount)
+        {
+            return GetBlockKey(filename, codeLine.CodeFileLineIndex, matchingLineCount);
+        }
+
+        private static string GetBlockKey(string filename, int codeFileLineIndex, int matchingLineCount)
+        {
+            return filename + "_" + codeFileLineIndex + "_" + matchingLineCount;
         }
 
         private bool MayStartBlock(CodeLine sourceLine, CodeFile sourceFile)

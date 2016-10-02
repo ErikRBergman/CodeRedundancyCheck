@@ -4,36 +4,29 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CodeRedundancyCheck.Model;
 
 namespace CodeRedundancyCheck.VisualBasic
 {
     public class VisualBasicCodeFileWriter
     {
-        public void WriteFile(string filename, CodeFile codeFile)
+        public async Task WriteFile(string filename, IEnumerable<CodeLine> codeLines , Encoding encoding)
         {
-            var builder = new StringBuilder(80 * 1024);
-            var lines = File.ReadAllLines(codeFile.Filename, Encoding.Default);
-
-            int currentLine = 0;
-
-            foreach (var line in codeFile.CodeLines)
+            using (var fileStream = File.Create(filename))
             {
-                if (line.OriginalLineNumber != 0)
-                {
-                    while (currentLine < line.OriginalLineNumber)
-                    {
-                        builder.AppendLine(lines[currentLine].TrimEnd());
-                        currentLine++;
-                    }
-                }
-                else
-                {
-                    builder.AppendLine(line.OriginalLineText);
-                }
+                await this.WriteStream(fileStream, codeLines, encoding);
             }
-
-            File.WriteAllText(filename, builder.ToString(), Encoding.Unicode);
         }
 
+        public async Task WriteStream(Stream stream, IEnumerable<CodeLine> codeLines, Encoding encoding, bool leaveStreamOpen = false)
+        {
+            using (var writer = new StreamWriter(stream, encoding, 4096, leaveStreamOpen))
+            {
+                foreach (var line in codeLines)
+                {
+                    await writer.WriteLineAsync(line.WriteableLine);
+                }
+            }
+        }
     }
 }

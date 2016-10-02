@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFileLoader.cs" />
+    <Compile Include="Extensions\HashSetExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Interface\ICodeFileLoader.cs" />
     <Compile Include="Interface\ICodeFileIndexer.cs" />
     <Compile Include="Model\Variable.cs" />

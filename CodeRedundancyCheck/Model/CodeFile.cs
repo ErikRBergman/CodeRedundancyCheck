@@ -10,6 +10,8 @@ namespace CodeRedundancyCheck
 
         public List<CodeLine> CodeLines { get; set; }
 
+        public List<CodeLine> AllSourceLines { get; set; }
+
         public Dictionary<string, List<CodeLine>> CodeLinesDictionary { get; set; }
     }
 

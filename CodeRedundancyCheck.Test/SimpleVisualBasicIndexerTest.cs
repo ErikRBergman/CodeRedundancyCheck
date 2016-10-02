@@ -27,7 +27,7 @@ namespace CodeRedundancyCheck.Test
         {
             var codeFileComparer = new CodeFileComparer();
 
-            var loader = new CodeFileLoader(new VisualBasicSourceWash(), new CodeFileIndexer());
+            var loader = new CodeFileLoader(new VisualBasicSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
             codeFileComparer.CodeLineFilters.Add(VisualBasicCodeLineFilter.Singleton);
 
             var files = Directory.GetFiles(@"C:\Projects\KCProjects\Claims\trunk\Inetpub\wwwroot\Claims\", "*.vb", SearchOption.AllDirectories);
@@ -42,19 +42,36 @@ namespace CodeRedundancyCheck.Test
             }
 
             var matches = codeFileComparer.GetMatches(5, codeFiles).OrderByDescending(c => c.Lines * c.Matches.Count).ToList();
-
-            var firstMatch = matches[0];
-
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
-            string uniqueString = Guid.NewGuid().ToString("D") + ":" + DateTime.Now.ToString("s");
-            commenter.CommentMatches(firstMatch, "' Start duplicate block " + uniqueString, "' End of duplicate block " + uniqueString);
+            var commentedMatches = new List<CodeFile>(100);
+
+            var commentedBlockCount = 0;
+            var commentedLineCount = 0;
+
+            var fullRefactoringLineSavings = 0;
+
+            foreach (var firstMatch in matches.Where(m => m.Matches.All(m2 => m2.CodeFile.Filename.EndsWith("Reg_Approval.aspx.vb"))))
+            {
+                var uniqueString = Guid.NewGuid().ToString("D") + ":" + DateTime.Now.ToString("s") + ", matches in this file @MATCHESINFILE@, block size: @BLOCKSIZE@ lines";
+                commenter.CommentMatches(firstMatch, "' Start duplicate block " + uniqueString, "' End of duplicate block " + uniqueString);
+
+                commentedBlockCount += firstMatch.Matches.Count;
+                fullRefactoringLineSavings += firstMatch.ActualLines * (firstMatch.Matches.Count-1);
+                commentedLineCount += firstMatch.ActualLines * firstMatch.Matches.Count;
+
+                commentedMatches.AddRange(firstMatch.Matches.Select(m => m.CodeFile).Distinct());
+            }
 
             var writer = new VisualBasicCodeFileWriter();
 
-            foreach (var file in firstMatch.Matches.Select(m => m.CodeFile).Distinct())
+            foreach (var file in commentedMatches.Distinct())
             {
-                writer.WriteFile(file.Filename + ".new", file);
+                File.Move(file.Filename, file.Filename + "." + DateTime.Now.ToString("s").Replace(":", "") + ".backup");
+                await writer.WriteFile(file.Filename , file.AllSourceLines, Encoding.Unicode);
+
+                //                await writer.WriteFile(file.Filename + "." + DateTime.Now.ToString("s").Replace(":", "") + ".result", file.AllSourceLines, Encoding.Default);
+                //  await writer.WriteFile(file.Filename + ".result", file.AllSourceLines, Encoding.Default);
             }
 
             // Assert.AreEqual(1, matches.Count);

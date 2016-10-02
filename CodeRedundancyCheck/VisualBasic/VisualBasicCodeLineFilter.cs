@@ -21,11 +21,33 @@ namespace CodeRedundancyCheck.VisualBasic
                 return false;
             }
 
+            if (string.Compare(codeLine.WashedLineText, "else", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
+            if (string.Compare(codeLine.WashedLineText, "elseif", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
             // never start with "end sub"
             if (string.Compare(codeLine.WashedLineText, "end sub", StringComparison.OrdinalIgnoreCase) == 0)
             {
                 return false;
             }
+
+            if (string.Compare(codeLine.WashedLineText, "catch", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
+
+            if (string.Compare(codeLine.WashedLineText, "end try", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return false;
+            }
+
 
             // never start with "end function"
             if (string.Compare(codeLine.WashedLineText, "end function", StringComparison.OrdinalIgnoreCase) == 0)

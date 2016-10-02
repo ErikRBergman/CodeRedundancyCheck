@@ -13,11 +13,13 @@ namespace CodeRedundancyCheck
     {
         private readonly ISourceWash sourceWash;
         private readonly ICodeFileIndexer indexer;
+        private readonly ICodeFileLineIndexer lineIndexer;
 
-        public CodeFileLoader(ISourceWash sourceWash, ICodeFileIndexer indexer)
+        public CodeFileLoader(ISourceWash sourceWash, ICodeFileIndexer indexer, ICodeFileLineIndexer lineIndexer)
         {
             this.sourceWash = sourceWash;
             this.indexer = indexer;
+            this.lineIndexer = lineIndexer;
         }
 
         public async Task<CodeFile> LoadCodeFile(Stream codeFileStream, Encoding encoding, bool leaveStreamOpen = false)
@@ -35,11 +37,18 @@ namespace CodeRedundancyCheck
                 }
             }
 
+            var allWashedLines = this.sourceWash.Wash(lines).ToList();
+
+
+
             var codeFile = new CodeFile
             {
-                CodeLines = this.sourceWash.Wash(lines).ToList()
-            };
+                CodeLines = allWashedLines.Where(line => line.IsCodeLine).ToList(),
+                AllSourceLines = allWashedLines
+             };
 
+
+            this.lineIndexer.IndexCodeFile(codeFile);
             this.indexer.IndexCodeFile(codeFile);
 
             return codeFile;

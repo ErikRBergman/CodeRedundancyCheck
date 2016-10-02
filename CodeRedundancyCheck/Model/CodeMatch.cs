@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CodeRedundancyCheck.Extensions;
 
 namespace CodeRedundancyCheck
 {
@@ -24,7 +25,7 @@ namespace CodeRedundancyCheck
                 {
                     if (match.MatchingLines != null && match.MatchingLines.Count > 0)
                     {
-                        count = Math.Max(match.MatchingLines[match.MatchingLines.Count - 1].OriginalLineNumber - match.MatchingLines[0].OriginalLineNumber, count);
+                        count = Math.Max(match.MatchingLines.LastItem().OriginalLineNumber - match.MatchingLines[0].OriginalLineNumber, count);
                     }
                 }
 
