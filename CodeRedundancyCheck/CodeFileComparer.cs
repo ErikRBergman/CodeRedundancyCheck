@@ -83,8 +83,11 @@ namespace CodeRedundancyCheck
                             continue;
                         }
 
-                        foreach (var lineMatch in lineMatches)
+                        int lineMatchesCount = lineMatches.Count;
+
+                        for (int index = 0; index < lineMatchesCount; index++)
                         {
+                            var lineMatch = lineMatches[index];
                             var lineMatchIndex = lineMatch.CodeFileLineIndex;
 
                             if (compareFile == sourceFile)
@@ -96,7 +99,6 @@ namespace CodeRedundancyCheck
                             }
 
                             {
-
                                 var sourceFileLineIndexTemp = sourceFileLineIndex;
 
                                 // If comparing to ourself, start checking one line below the current one
@@ -141,7 +143,6 @@ namespace CodeRedundancyCheck
                             }
 
                             {
-
                                 var sourceFileLineIndexTemp = sourceFileLineIndex;
 
                                 // If comparing to ourself, start checking one line below the current one
@@ -157,7 +158,6 @@ namespace CodeRedundancyCheck
                                 var compareLine = allCompareFileLines[compareFileLineIndexTemp];
 
                                 sourceLine = allSourceLines[sourceFileLineIndex];
-
 
                                 sourceLines.Clear();
                                 compareLines.Clear();
@@ -202,10 +202,10 @@ namespace CodeRedundancyCheck
                                         if (result.TryGetValue(sourceLinesKey, out match) == false)
                                         {
                                             match = new CodeMatch
-                                            {
-                                                CodeFileMatches = new List<CodeFileMatch>(),
-                                                Lines = matchingLineCount
-                                            };
+                                                    {
+                                                        CodeFileMatches = new List<CodeFileMatch>(),
+                                                        Lines = matchingLineCount
+                                                    };
 
                                             match.CodeFileMatches.Add(new CodeFileMatch(sourceFile, sourceLines[0].CodeFileLineIndex, new List<CodeLine>(sourceLines.AsCollection())));
                                             result.Add(sourceLinesKey, match);
@@ -215,7 +215,6 @@ namespace CodeRedundancyCheck
                                     }
                                 }
                             }
-
                         }
                     }
                 }
