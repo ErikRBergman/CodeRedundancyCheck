@@ -4,15 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F0365803-8E33-49D3-8DA5-12DE5E4A874E}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{21FF24D8-8715-4690-BEEF-2958A0134567}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CodeRedundancyCheck</RootNamespace>
-    <AssemblyName>CodeRedundancyCheck</AssemblyName>
+    <RootNamespace>CodeRedundancyCheck.WinForms.UI</RootNamespace>
+    <AssemblyName>CodeRedundancyCheck.WinForms.UI</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -36,38 +39,51 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeFileLoader.cs" />
-    <Compile Include="Extensions\HashSetExtensions.cs" />
-    <Compile Include="Extensions\ListExtensions.cs" />
-    <Compile Include="Interface\ICodeFileLoader.cs" />
-    <Compile Include="Interface\ICodeFileIndexer.cs" />
-    <Compile Include="Languages\CSharp\CSharpCodeFileWriter.cs" />
-    <Compile Include="Languages\CSharp\CSharpCodeLineFilter.cs" />
-    <Compile Include="Languages\CSharp\CSharpSourceWash.cs" />
-    <Compile Include="Model\Variable.cs" />
-    <Compile Include="Model\MethodDefinition.cs" />
-    <Compile Include="Model\CodeLineMeaning.cs" />
-    <Compile Include="Interface\ICodeLineParser.cs" />
-    <Compile Include="Model\CodeFile.cs" />
-    <Compile Include="CodeFileIndexer.cs" />
-    <Compile Include="CodeFileLineIndexer.cs" />
-    <Compile Include="Model\CodeFileMatch.cs" />
-    <Compile Include="Model\CodeLine.cs" />
-    <Compile Include="Model\CodeMatch.cs" />
-    <Compile Include="Interface\ICodeFileLineIndexer.cs" />
-    <Compile Include="Interface\ICodeLineFilter.cs" />
-    <Compile Include="Interface\ISourceWash.cs" />
-    <Compile Include="CodeFileComparer.cs" />
-    <Compile Include="Languages\VisualBasic\VisualBasicCodeFileWriter.cs" />
-    <Compile Include="Languages\VisualBasic\VisualBasicCodeLineFilter.cs" />
-    <Compile Include="CodeFileMatchCommenter.cs" />
-    <Compile Include="Languages\VisualBasic\VisualBasicSourceWash.cs" />
-    <Compile Include="VisualBasicWash.cs" />
+    <Compile Include="ResultForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ResultForm.Designer.cs">
+      <DependentUpon>ResultForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ResultForm.resx">
+      <DependentUpon>ResultForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeRedundancyCheck\CodeRedundancyCheck.csproj">
+      <Project>{f0365803-8e33-49d3-8da5-12de5e4a874e}</Project>
+      <Name>CodeRedundancyCheck</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

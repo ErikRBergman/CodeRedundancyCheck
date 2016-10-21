@@ -14,23 +14,20 @@ namespace CodeRedundancyCheck
             this.codeFileLineIndexer = codeFileLineIndexer;
         }
 
-        public void CommentMatches(CodeMatch match, string startComment, string endComment)
+        public void CommentMatches(CodeMatch match, CodeFileMatch codeFileMatch, string startComment, string endComment)
         {
-            var matchesInFileLookup = match.Matches.ToLookup(m => m.CodeFile.Filename);
+            var matchesInFileLookup = match.CodeFileMatches.ToLookup(m => m.CodeFile.Filename);
 
             var sourceComments = new Comments(startComment, endComment);
 
-            foreach (var instance in match.Matches.OrderByDescending(m => m.FirstCompressedLineNumber))
-            {
-                var matchesInFileAsString = matchesInFileLookup[instance.CodeFile.Filename].Count();
+            var matchesInFileAsString = matchesInFileLookup[codeFileMatch.CodeFile.Filename].Count();
 
-                var comments = GetComments(sourceComments, matchesInFileAsString, GetBlockSize(instance));
+            var comments = GetComments(sourceComments, matchesInFileAsString, match.CodeFileMatches.Count, GetBlockSize(codeFileMatch));
 
-                instance.CodeFile.AllSourceLines.Insert(instance.MatchingLines.LastItem().OriginalLineNumber + 1, CodeLine.CreateTargetLine(comments.EndComment));
-                instance.CodeFile.AllSourceLines.Insert(instance.MatchingLines[0].OriginalLineNumber, CodeLine.CreateTargetLine(comments.StartComment));
-            }
+            codeFileMatch.CodeFile.AllSourceLines.Insert(codeFileMatch.MatchingLines.LastItem().OriginalLineNumber + 1, CodeLine.CreateTargetLine(comments.EndComment));
+            codeFileMatch.CodeFile.AllSourceLines.Insert(codeFileMatch.MatchingLines[0].OriginalLineNumber, CodeLine.CreateTargetLine(comments.StartComment));
 
-            foreach (var instance in match.Matches.Select(m => m.CodeFile).Distinct())
+            foreach (var instance in match.CodeFileMatches.Select(m => m.CodeFile).Distinct())
             {
                 this.codeFileLineIndexer.IndexCodeFile(instance);
             }
@@ -41,13 +38,23 @@ namespace CodeRedundancyCheck
             return codeFileMatch.MatchingLines.LastItem().OriginalLineNumber - codeFileMatch.MatchingLines[0].OriginalLineNumber;
         }
 
-        private static Comments GetComments(Comments sourceComments, int matchesInFile, int blockSize)
+        private static Comments GetComments(Comments sourceComments, int matchesInFile, int matchesInAllFiles, int blockSize)
         {
             var matchesInFileAsString = matchesInFile.ToString();
             var blockSizeString = blockSize.ToString();
-            var currentEndComment = sourceComments.EndComment.Replace("@MATCHESINFILE@", matchesInFileAsString).Replace("@BLOCKSIZE@", blockSizeString);
-            var currentStartComment = sourceComments.StartComment.Replace("@MATCHESINFILE@", matchesInFileAsString).Replace("@BLOCKSIZE@", blockSizeString);
+            var matchesInAllFilesString = matchesInAllFiles.ToString();
+
+            var matchesInOtherFilesString = (matchesInAllFiles - matchesInFile).ToString();
+
+            var currentEndComment = ReplaceMacrosInString(sourceComments.EndComment, matchesInFileAsString, blockSizeString, matchesInOtherFilesString);
+            var currentStartComment = ReplaceMacrosInString(sourceComments.StartComment, matchesInFileAsString, blockSizeString, matchesInOtherFilesString);
+
             return new Comments(currentStartComment, currentEndComment);
+        }
+
+        private static string ReplaceMacrosInString(string str, string matchesInFileAsString, string blockSizeString, string matchesInOtherFilesString)
+        {
+            return str.Replace("@MATCHESINFILE@", matchesInFileAsString).Replace("@BLOCKSIZE@", blockSizeString).Replace("@MATCHESINOTHERFILES@", matchesInOtherFilesString);
         }
 
         private struct Comments

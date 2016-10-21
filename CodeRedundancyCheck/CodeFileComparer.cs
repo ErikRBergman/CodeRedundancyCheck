@@ -82,7 +82,7 @@ namespace CodeRedundancyCheck
                             sourceLine = allSourceLines[sourceFileLineIndex];
 
                             // If comparing to ourself, start checking one line below the current one
-                            int compareFileLineIndex = compareFile == sourceFile ? lineMatch.CodeFileLineIndex : 0;
+                            int compareFileLineIndex = lineMatch.CodeFileLineIndex;
 
                             // Only compare to forward to the match we found or circular findings would occur
                             var lastSourceLine = compareFile == sourceFile ? lineMatch.CodeFileLineIndex : allSourceLines.Count;
@@ -123,12 +123,12 @@ namespace CodeRedundancyCheck
 
                                 if (addedBlocks.DoesNotContainAll(compareLinesKey, sourceLinesKey))
                                 {
+                                    addedBlocks.AddMultiple(sourceLinesKey, compareLinesKey);
+
                                     if (sourceLines[0].WashedLineText == "Dim Cause As Integer")
                                     {
                                         var xaxa = 1;
                                     }
-
-                                    addedBlocks.AddMultiple(sourceLinesKey, compareLinesKey);
 
                                     //// Remove target blocks that are part of the added block
                                     for (int i = 1; i < matchingLineCount; i++)
@@ -143,15 +143,15 @@ namespace CodeRedundancyCheck
                                     {
                                         match = new CodeMatch
                                         {
-                                            Matches = new List<CodeFileMatch>(),
+                                            CodeFileMatches = new List<CodeFileMatch>(),
                                             Lines = matchingLineCount
                                         };
 
-                                        match.Matches.Add(new CodeFileMatch(sourceFile, sourceLines[0].CodeFileLineIndex, new List<CodeLine>(sourceLines)));
+                                        match.CodeFileMatches.Add(new CodeFileMatch(sourceFile, sourceLines[0].CodeFileLineIndex, new List<CodeLine>(sourceLines)));
                                         result.Add(sourceLinesKey, match);
                                     }
 
-                                    match.Matches.Add(new CodeFileMatch(compareFile, compareLines[0].CodeFileLineIndex, new List<CodeLine>(compareLines)));
+                                    match.CodeFileMatches.Add(new CodeFileMatch(compareFile, compareLines[0].CodeFileLineIndex, new List<CodeLine>(compareLines)));
                                 }
 
                             }

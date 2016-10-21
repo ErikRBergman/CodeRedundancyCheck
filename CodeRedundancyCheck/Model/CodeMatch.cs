@@ -7,8 +7,23 @@ namespace CodeRedundancyCheck
 {
     public class CodeMatch
     {
+        private string uniqueId;
 
-        public List<CodeFileMatch> Matches { get; set; }
+        public string UniqueId
+        {
+            get
+            {
+                if (this.uniqueId == null)
+                {
+                    this.uniqueId = Guid.NewGuid().ToString("N");
+                }
+
+                return this.uniqueId;
+            }
+            set { this.uniqueId = value; }
+        }
+
+        public List<CodeFileMatch> CodeFileMatches { get; set; }
 
         public int Lines { get; set; }
 
@@ -16,12 +31,12 @@ namespace CodeRedundancyCheck
         {
             get
             {
-                if (this.Matches == null)
+                if (this.CodeFileMatches == null)
                     return 0;
 
                 int count = 0;
 
-                foreach (var match in this.Matches)
+                foreach (var match in this.CodeFileMatches)
                 {
                     if (match.MatchingLines != null && match.MatchingLines.Count > 0)
                     {
@@ -35,11 +50,11 @@ namespace CodeRedundancyCheck
 
         public override string ToString()
         {
-            string text = "Actual lines:" + this.ActualLines + ", Matched lines:" + this.Lines + ", Matches: " + this.Matches.Count;
+            string text = "Actual lines:" + this.ActualLines + ", Matched lines:" + this.Lines + ", Matches: " + this.CodeFileMatches.Count;
 
-            if (this.Matches != null && this.Matches.Count > 0)
+            if (this.CodeFileMatches != null && this.CodeFileMatches.Count > 0)
             {
-                text = text + ", First match: " + this.Matches[0];
+                text = text + ", First match: " + this.CodeFileMatches[0];
             }
 
 

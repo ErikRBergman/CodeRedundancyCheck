@@ -6,14 +6,14 @@ namespace CodeRedundancyCheck
 {
     public class CodeFileMatch
     {
-        public CodeFileMatch(CodeFile codeFile, int firstCompressedLineNumber, List<CodeLine> matchingLines)
+        public CodeFileMatch(CodeFile codeFile, int firstCodeFileLineNumber, List<CodeLine> matchingLines)
         {
             this.MatchingLines = matchingLines;
             this.CodeFile = codeFile;
-            this.FirstCompressedLineNumber = firstCompressedLineNumber;
+            this.FirstCodeFileLineNumber = firstCodeFileLineNumber;
         }
 
-        public int FirstCompressedLineNumber { get; set; }
+        public int FirstCodeFileLineNumber { get; set; }
 
         public CodeFile CodeFile { get; set; }
         public List<CodeLine> MatchingLines { get; set; }
