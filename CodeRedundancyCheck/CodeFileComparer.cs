@@ -14,7 +14,7 @@ namespace CodeRedundancyCheck
 
     public class CodeFileComparer
     {
-        public List<ICodeLineFilter> CodeLineFilters { get; private set; } = new List<ICodeLineFilter>();
+        public ICodeLineFilter CodeLineFilter { get; set; }
 
         public Task<List<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, CodeFile firstCodeFile, params CodeFile[] codeFiles)
         {
@@ -52,6 +52,8 @@ namespace CodeRedundancyCheck
 
             var addedBlocks = new HashSet<long>();
 
+            var filter = this.CodeLineFilter;
+
             while (codeFileQueue.Count > 0)
             {
                 var sourceFile = codeFileQueue.Dequeue();
@@ -76,7 +78,7 @@ namespace CodeRedundancyCheck
                             continue;
                         }
 
-                        if (this.MayStartBlock(sourceLine, sourceFile) == false)
+                        if (filter.MayStartBlock(sourceLine, sourceFile) == false)
                         {
                             continue;
                         }
@@ -238,21 +240,7 @@ namespace CodeRedundancyCheck
 
             //            return uniqueId + "_" + codeFileLineIndex + "_" + matchingLineCount;
         }
-
-        private bool MayStartBlock(CodeLine sourceLine, CodeFile sourceFile)
-        {
-            foreach (var filter in this.CodeLineFilters)
-            {
-                var result = filter.MayStartBlock(sourceLine, sourceFile);
-
-                if (result == false)
-                    return false;
-            }
-
-            return true;
-        }
-
-
+        
         public IEnumerable<CodeLine> LoadFileData(string filename)
         {
             return File.ReadAllLines(filename).Select((text, lineNumber) =>

@@ -29,7 +29,7 @@ namespace CodeRedundancyCheck.Test
             var codeFileComparer = new CodeFileComparer();
 
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
-            codeFileComparer.CodeLineFilters.Add(CSharpCodeLineFilter.Singleton);
+            codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
             var files = Directory.GetFiles(@"C:\projects\Celsa\QR\Trunk\", "*.cs", SearchOption.AllDirectories);
 
@@ -104,7 +104,7 @@ namespace CodeRedundancyCheck.Test
             var codeFileComparer = new CodeFileComparer();
 
             var loader = new CodeFileLoader(new VisualBasicSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
-            codeFileComparer.CodeLineFilters.Add(VisualBasicCodeLineFilter.Singleton);
+            codeFileComparer.CodeLineFilter = VisualBasicCodeLineFilter.Singleton;
 
             var files = Directory.GetFiles(@"C:\Projects\KCProjects\Claims\trunk\Inetpub\wwwroot\Claims\", "*.vb", SearchOption.AllDirectories);
 

@@ -57,7 +57,7 @@ namespace CodeRedundancyCheck.WinForms.UI
             var codeFileComparer = new CodeFileComparer();
 
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
-            codeFileComparer.CodeLineFilters.Add(CSharpCodeLineFilter.Singleton);
+            codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
             var files = Directory.GetFiles(@"C:\projects\Celsa\QR\Trunk\", "*.cs", SearchOption.AllDirectories);
 

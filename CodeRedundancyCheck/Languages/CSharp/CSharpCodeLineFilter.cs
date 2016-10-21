@@ -14,7 +14,6 @@
 
         public bool MayStartBlock(CodeLine codeLine, CodeFile codeFile)
         {
-
             if (codeLine.WashedLineHashCode == endOfBlockHashCode && string.Compare(codeLine.WashedLineText, "}", StringComparison.Ordinal) == 0)
             {
                 return false;
