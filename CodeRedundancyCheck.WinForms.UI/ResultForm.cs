@@ -70,7 +70,7 @@ namespace CodeRedundancyCheck.WinForms.UI
                 codeFiles.Add(file);
             }
 
-            var codeMatches = codeFileComparer.GetMatches(5, codeFiles).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();

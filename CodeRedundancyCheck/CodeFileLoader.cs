@@ -37,16 +37,13 @@ namespace CodeRedundancyCheck
                 }
             }
 
-            var allWashedLines = this.sourceWash.Wash(lines).ToList();
-
-
-
+            var allWashedLines = this.sourceWash.Wash(lines).ToArray();
+            
             var codeFile = new CodeFile
             {
-                CodeLines = allWashedLines.Where(line => line.IsCodeLine).ToList(),
+                CodeLines = allWashedLines.Where(line => line.IsCodeLine).ToArray(),
                 AllSourceLines = allWashedLines
              };
-
 
             this.lineIndexer.IndexCodeFile(codeFile);
             this.indexer.IndexCodeFile(codeFile);

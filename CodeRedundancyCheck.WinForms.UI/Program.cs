@@ -6,6 +6,7 @@ using System.Windows.Forms;
 
 namespace CodeRedundancyCheck.WinForms.UI
 {
+    using System.Diagnostics;
     using System.IO;
     using System.Text;
 
@@ -23,7 +24,13 @@ namespace CodeRedundancyCheck.WinForms.UI
             //Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new ResultForm());
 
+            Stopwatch sw = Stopwatch.StartNew();
+
             CheckQRAsync().Wait();
+
+            sw.Stop();
+
+            Console.WriteLine(sw.ElapsedMilliseconds + " ms");
 
         }
 
@@ -39,14 +46,14 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var codeFiles = new List<CodeFile>(files.Length);
 
-            foreach (var filename in files)
+            foreach (var filename in files.OrderBy(f => f).Take(350))
             {
                 var file = await loader.LoadCodeFile(File.OpenRead(filename), Encoding.Default);
                 file.Filename = filename;
                 codeFiles.Add(file);
             }
 
-            var codeMatches = codeFileComparer.GetMatches(5, codeFiles).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();
@@ -60,17 +67,16 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var filenameToFind = "SpecificationController.cs";
 
-            //            foreach (var match in matches.Where(m => m.Matches.Count(m2 => m2.CodeFile.Filename.EndsWith("Reg_Approval.aspx.vb")) > 1).SelectMany(m => m.Matches.Select(n => new { CodeMatch = m, CodeFileMatch = n })).OrderBy(m => m.CodeFileMatch.CodeFile.Filename).ThenByDescending(m => m.CodeFileMatch.MatchingLines[0].OriginalLineNumber))
             foreach (
                 var matchFile in
-                codeMatches.Where(m => m.CodeFileMatches.Count(m2 => m2.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase)) > 1).SelectMany(codeMatch => codeMatch.CodeFileMatches.Select(codeFileMatch => new
-                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                           CodeMatch =
-                                                                                                                                                                                                                                           codeMatch,
-                                                                                                                                                                                                                                           CodeFileMatch =
-                                                                                                                                                                                                                                           codeFileMatch
-                                                                                                                                                                   })).GroupBy(
-                    m => m.CodeFileMatch.CodeFile))
+                codeMatches.Where(m => m.CodeFileMatches.Count(m2 => m2.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase)) > 1).
+                SelectMany(codeMatch => codeMatch.CodeFileMatches.Select(codeFileMatch => new
+                    {
+                        CodeMatch =
+                        codeMatch,
+                        CodeFileMatch =
+                        codeFileMatch
+                    })).GroupBy(m => m.CodeFileMatch.CodeFile))
             {
                 // Descending line to ensure we always add lines from the end.
                 foreach (var match in matchFile.OrderByDescending(m => m.CodeFileMatch.FirstCodeFileLineNumber))

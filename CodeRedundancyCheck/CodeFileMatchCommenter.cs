@@ -5,6 +5,8 @@ using CodeRedundancyCheck.Model;
 
 namespace CodeRedundancyCheck
 {
+    using System;
+
     public class CodeFileMatchCommenter
     {
         private readonly ICodeFileLineIndexer codeFileLineIndexer;
@@ -24,8 +26,12 @@ namespace CodeRedundancyCheck
 
             var comments = GetComments(sourceComments, matchesInFileAsString, match.CodeFileMatches.Count, GetBlockSize(codeFileMatch));
 
-            codeFileMatch.CodeFile.AllSourceLines.Insert(codeFileMatch.MatchingLines.LastItem().OriginalLineNumber + 1, CodeLine.CreateTargetLine(comments.EndComment));
-            codeFileMatch.CodeFile.AllSourceLines.Insert(codeFileMatch.MatchingLines[0].OriginalLineNumber, CodeLine.CreateTargetLine(comments.StartComment));
+            var lines = codeFileMatch.CodeFile.AllSourceLines.ToList();
+
+            lines.Insert(codeFileMatch.MatchingLines.LastItem().OriginalLineNumber + 1, CodeLine.CreateTargetLine(comments.EndComment));
+            lines.Insert(codeFileMatch.MatchingLines[0].OriginalLineNumber, CodeLine.CreateTargetLine(comments.StartComment));
+
+            codeFileMatch.CodeFile.AllSourceLines = lines.ToArray();
 
             foreach (var instance in match.CodeFileMatches.Select(m => m.CodeFile).Distinct())
             {

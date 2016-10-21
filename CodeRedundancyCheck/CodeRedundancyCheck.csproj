@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeFileLoader.cs" />
+    <Compile Include="Common\ThinList.cs" />
     <Compile Include="Extensions\HashSetExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Interface\ICodeFileLoader.cs" />

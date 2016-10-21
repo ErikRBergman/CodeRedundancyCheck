@@ -42,7 +42,7 @@ namespace CodeRedundancyCheck.Test
                 codeFiles.Add(file);
             }
 
-            var codeMatches = codeFileComparer.GetMatches(5, codeFiles).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();
@@ -117,7 +117,7 @@ namespace CodeRedundancyCheck.Test
                 codeFiles.Add(file);
             }
 
-            var codeMatches = codeFileComparer.GetMatches(5, codeFiles).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();
@@ -176,14 +176,11 @@ namespace CodeRedundancyCheck.Test
         }
 
         [TestMethod]
-        public void TestCompareFiles2()
+        public async Task TestCompareFiles2()
         {
             var indexer = new CodeFileComparer();
 
-            var sourceFile = new CodeFile
-            {
-                CodeLines = new List<CodeLine>(1000)
-            };
+            var codeLines = new List<CodeLine>(1000);
 
             int line = 0;
 
@@ -191,7 +188,7 @@ namespace CodeRedundancyCheck.Test
             {
                 int lineNumber = i % 2;
 
-                sourceFile.CodeLines.Add(
+                codeLines.Add(
                     new CodeLine(
                         originalLineText: lineNumber.ToString(),
                         originalLineNumber: ++line,
@@ -201,10 +198,16 @@ namespace CodeRedundancyCheck.Test
                     });
             }
 
-            sourceFile.CodeLines = VisualBasicSourceWash.Singleton.Wash(sourceFile.CodeLines).ToList();
+            var sourceFile = new CodeFile
+            {
+                CodeLines = codeLines.ToArray()
+            };
+
+
+            sourceFile.CodeLines = VisualBasicSourceWash.Singleton.Wash(sourceFile.CodeLines).ToArray();
             new CodeFileIndexer().IndexCodeFile(sourceFile);
 
-            var matches = indexer.GetMatches(2, sourceFile).OrderByDescending(c => c.Lines).ToList();
+            var matches = (await indexer.GetMatchesAsync(2, sourceFile)).OrderByDescending(c => c.Lines).ToList();
             // var matches = indexer.GetMatches(5, sourceFile).ToList();
 
             Assert.AreEqual(1, matches.Count);
@@ -214,5 +217,22 @@ namespace CodeRedundancyCheck.Test
         }
 
 
+    }
+
+    public interface IFilter<T>
+    {
+        IEnumerable<T> Handle(IEnumerable<T> items);
+    }
+
+    public class ArticleFilter : IFilter<Article>
+    {
+        public IEnumerable<Article> Handle(IEnumerable<Article> items)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Article
+    {
     }
 }

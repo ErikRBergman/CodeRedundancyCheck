@@ -9,16 +9,20 @@ namespace CodeRedundancyCheck
     {
         public void IndexCodeFile(CodeFile codeFile)
         {
-            codeFile.CodeLinesDictionary = new Dictionary<string, List<CodeLine>>(codeFile.CodeLines.Count, StringComparer.OrdinalIgnoreCase);
+            codeFile.CodeLinesDictionary = new Dictionary<int, List<CodeLine>>(codeFile.CodeLines.Length);
 
             foreach (var line in codeFile.CodeLines)
             {
                 List<CodeLine> list;
 
-                if (!codeFile.CodeLinesDictionary.TryGetValue(line.WashedLineText, out list))
+                var washedLineText = line.WashedLineText;
+                line.WashedLineHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode(washedLineText);
+
+                if (!codeFile.CodeLinesDictionary.TryGetValue(line.WashedLineHashCode, out list))
                 {
                     list = new List<CodeLine>();
-                    codeFile.CodeLinesDictionary.Add(line.WashedLineText, list);
+                    codeFile.CodeLinesDictionary.Add(line.WashedLineHashCode, list);
+
                 }
 
                 list.Add(line);

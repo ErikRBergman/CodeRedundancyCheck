@@ -8,11 +8,13 @@ namespace CodeRedundancyCheck
     {
         public string Filename { get; set; }
 
-        public List<CodeLine> CodeLines { get; set; }
+        public int UniqueId { get; set; }
 
-        public List<CodeLine> AllSourceLines { get; set; }
+        public CodeLine[] CodeLines { get; set; }
 
-        public Dictionary<string, List<CodeLine>> CodeLinesDictionary { get; set; }
+        public CodeLine[] AllSourceLines { get; set; }
+
+        public Dictionary<int, List<CodeLine>> CodeLinesDictionary { get; set; }
     }
 
 }
