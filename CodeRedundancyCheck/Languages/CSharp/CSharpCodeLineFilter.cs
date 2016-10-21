@@ -9,15 +9,18 @@
     {
         public static ICodeLineFilter Singleton { get; } = new CSharpCodeLineFilter();
 
+        private static int endOfBlockHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("}");
+        private static int elseHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("else");
+
         public bool MayStartBlock(CodeLine codeLine, CodeFile codeFile)
         {
 
-            if (string.Compare(codeLine.WashedLineText, "}", StringComparison.OrdinalIgnoreCase) == 0)
+            if (codeLine.WashedLineHashCode == endOfBlockHashCode && string.Compare(codeLine.WashedLineText, "}", StringComparison.Ordinal) == 0)
             {
                 return false;
             }
 
-            if (string.Compare(codeLine.WashedLineText, "else", StringComparison.OrdinalIgnoreCase) == 0)
+            if (elseHashCode == codeLine.WashedLineHashCode && string.Compare(codeLine.WashedLineText, "else", StringComparison.Ordinal) == 0)
             {
                 return false;
             }
