@@ -35,20 +35,24 @@
 
             var codeLength = sourceCode.Length;
             char? lastChar = null;
+            bool lastCharIsWhiteSpace = false;
 
             for (int index = 0; index < codeLength; index++)
             {
                 var ch = sourceCode[index];
 
+                bool isWhitespace = char.IsWhiteSpace(ch);
+
                 // Remove leading and multiple white spaces
-                if (char.IsWhiteSpace(ch) && (builder.Length == 0 || isInText == false && (lastChar.HasValue == false || char.IsWhiteSpace(lastChar.Value))))
+                if (isWhitespace && (builder.Length == 0 || isInText == false && (lastChar.HasValue == false || lastCharIsWhiteSpace)))
                 {
                     lastChar = ch;
+                    lastCharIsWhiteSpace = true;
                     continue;
                 }
 
                 // allways use single space
-                if (char.IsWhiteSpace(ch) && isInText == false)
+                if (isWhitespace && isInText == false)
                 {
                     ch = ' ';
                 }
@@ -93,6 +97,7 @@
                 }
 
                 lastChar = ch;
+                lastCharIsWhiteSpace = false;
             }
 
             return builder.ToString().TrimEnd();

@@ -1,6 +1,7 @@
 ﻿namespace CodeRedundancyCheck.Languages.CSharp
 {
     using System;
+    using System.Text;
 
     using CodeRedundancyCheck.Interface;
     using CodeRedundancyCheck.Model;
@@ -12,16 +13,45 @@
         private static int endOfBlockHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("}");
         private static int elseHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("else");
 
+        private static ulong elseBlock = 0;
+
+        static unsafe CSharpCodeLineFilter()
+        {
+            unsafe
+            {
+                fixed (char* valuePtr = "else")
+                {
+                    elseBlock = *(ulong*)valuePtr;
+                }
+            }
+        }
+
         public bool MayStartBlock(CodeLine codeLine, CodeFile codeFile)
         {
-            if (codeLine.WashedLineHashCode == endOfBlockHashCode && string.Compare(codeLine.WashedLineText, "}", StringComparison.Ordinal) == 0)
+            if (codeLine.WashedLineHashCode == endOfBlockHashCode)
             {
-                return false;
+                var washedLine = codeLine.WashedLineText;
+                if (washedLine[0] == '}' && washedLine.Length == 1)
+                {
+                    return false;
+                }
             }
-
-            if (elseHashCode == codeLine.WashedLineHashCode && string.Compare(codeLine.WashedLineText, "else", StringComparison.Ordinal) == 0)
+            else if (elseHashCode == codeLine.WashedLineHashCode)
             {
-                return false;
+                var washedLine = codeLine.WashedLineText;
+                if (washedLine.Length == 4)
+                {
+                    unsafe
+                    {
+                        fixed (char* valuePtr = washedLine)
+                        {
+                            if (*(ulong*)valuePtr == elseBlock)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
 
             return true;

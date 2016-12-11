@@ -26,12 +26,13 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             Stopwatch sw = Stopwatch.StartNew();
 
+            // D:\projects\dynamaster6
+
             CheckQRAsync().Wait();
 
             sw.Stop();
 
             Console.WriteLine(sw.ElapsedMilliseconds + " ms");
-
         }
 
 
@@ -40,13 +41,17 @@ namespace CodeRedundancyCheck.WinForms.UI
             var codeFileComparer = new CodeFileComparer();
 
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
-            codeFileComparer.CodeLineFilter =  CSharpCodeLineFilter.Singleton;
+            codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
-            var files = Directory.GetFiles(@"C:\projects\Celsa\QR\Trunk\", "*.cs", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
+                .Where(
+                f => !f.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase)
+                && !f.EndsWith(".designer.cs", StringComparison.OrdinalIgnoreCase)
+                ).ToArray();
 
             var codeFiles = new List<CodeFile>(files.Length);
 
-            foreach (var filename in files.OrderBy(f => f).Take(350))
+            foreach (var filename in files.OrderBy(f => f))
             {
                 var file = await loader.LoadCodeFile(File.OpenRead(filename), Encoding.Default);
                 file.Filename = filename;
@@ -67,35 +72,35 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var filenameToFind = "SpecificationController.cs";
 
-            foreach (
-                var matchFile in
-                codeMatches.Where(m => m.CodeFileMatches.Count(m2 => m2.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase)) > 1).
-                SelectMany(codeMatch => codeMatch.CodeFileMatches.Select(codeFileMatch => new
-                    {
-                        CodeMatch =
-                        codeMatch,
-                        CodeFileMatch =
-                        codeFileMatch
-                    })).GroupBy(m => m.CodeFileMatch.CodeFile))
-            {
-                // Descending line to ensure we always add lines from the end.
-                foreach (var match in matchFile.OrderByDescending(m => m.CodeFileMatch.FirstCodeFileLineNumber))
-                {
-                    if (match.CodeFileMatch.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase))
-                    {
-                        thisFileLines += match.CodeFileMatch.MatchingLines.Count;
-                    }
+            //var matches = codeMatches
+            //    .Where(m => m.CodeFileMatches.Count(m2 => m2.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase)) > 1)
+            //    .SelectMany(codeMatch => codeMatch.CodeFileMatches.Select(codeFileMatch => new
+            //    {
+            //        CodeMatch = codeMatch,
+            //        CodeFileMatch = codeFileMatch
+            //    }))
+            //    .GroupBy(m => m.CodeFileMatch.CodeFile);
 
-                    var uniqueString = match.CodeMatch.UniqueId + ":" + DateTime.Now.ToString("s") + ", matches in this file @MATCHESINFILE@ (@MATCHESINOTHERFILES@ in other files), block size: @BLOCKSIZE@ lines";
-                    commenter.CommentMatches(match.CodeMatch, match.CodeFileMatch, "' Start duplicate block " + uniqueString, "' End of duplicate block " + uniqueString);
+            //foreach (var matchFile in matches)
+            //{
+            //    // Descending line to ensure we always add lines from the end.
+            //    foreach (var match in matchFile.OrderByDescending(m => m.CodeFileMatch.FirstCodeFileLineNumber))
+            //    {
+            //        if (match.CodeFileMatch.CodeFile.Filename.EndsWith(filenameToFind, StringComparison.OrdinalIgnoreCase))
+            //        {
+            //            thisFileLines += match.CodeFileMatch.MatchingLines.Count;
+            //        }
 
-                    commentedBlockCount += match.CodeMatch.CodeFileMatches.Count;
-                    fullRefactoringLineSavings += match.CodeMatch.ActualLines * (match.CodeMatch.CodeFileMatches.Count - 1);
-                    commentedLineCount += match.CodeMatch.ActualLines * match.CodeMatch.CodeFileMatches.Count;
+            //        var uniqueString = match.CodeMatch.UniqueId + ":" + DateTime.Now.ToString("s") + ", matches in this file @MATCHESINFILE@ (@MATCHESINOTHERFILES@ in other files), block size: @BLOCKSIZE@ lines";
+            //        commenter.CommentMatches(match.CodeMatch, match.CodeFileMatch, "' Start duplicate block " + uniqueString, "' End of duplicate block " + uniqueString);
 
-                    commentedMatches.Add(match.CodeFileMatch.CodeFile);
-                }
-            }
+            //        commentedBlockCount += match.CodeMatch.CodeFileMatches.Count;
+            //        fullRefactoringLineSavings += match.CodeMatch.ActualLines * (match.CodeMatch.CodeFileMatches.Count - 1);
+            //        commentedLineCount += match.CodeMatch.ActualLines * match.CodeMatch.CodeFileMatches.Count;
+
+            //        commentedMatches.Add(match.CodeFileMatch.CodeFile);
+            //    }
+            //}
 
 
             //var writer = new CSharpCodeFileWriter();

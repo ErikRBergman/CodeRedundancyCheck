@@ -1,34 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CodeRedundancyCheck.Common
+﻿namespace CodeRedundancyCheck.Common
 {
+    using System;
     using System.Collections;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.CompilerServices;
 
-    internal class ThinList<T>
+    public class ThinList<T>
     {
-        internal readonly T[] array;
+        internal T[] array;
 
-        private int length = 0;
+        public int length = 0;
 
         public ThinList(int capacity)
         {
             this.array = new T[capacity];
         }
 
-        public void Add(T item)
-        {
-            this.array[this.length] = item;
-            this.length++;
-        }
-
-        public void Clear()
-        {
-            this.length = 0;
-        }
+        public int Capacity => this.array.Length;
 
         public int Length => this.length;
 
@@ -37,19 +26,51 @@ namespace CodeRedundancyCheck.Common
             return list.array;
         }
 
-        public T this[int index]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add(T item)
         {
-            get
-            {
-                return this.array[index];
-            }
+            this.array[this.length] = item;
+            this.length++;
         }
 
         public ICollection<T> AsCollection() => new ThinListCollection<T>(this);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            this.length = 0;
+        }
+
+        public bool Contains(T item)
+        {
+            return this.array.Contains(item);
+        }
+
+        public T[] Detach()
+        {
+            var detachedArray = this.array;
+            this.array = null;
+            return detachedArray;
+        }
+
+        public T[] GetArrayFromCurrentSize()
+        {
+            var newArray = new T[this.length];
+            Array.Copy(this.array, newArray, this.length);
+            return newArray;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Item(int index) => this.array[index];
+
+        public void Resize(int newCapacity)
+        {
+            var newArray = new T[newCapacity];
+            Array.Resize(ref this.array, newCapacity);
+        }
     }
 
-    internal struct ThinListCollection<T> : ICollection<T>
+    internal struct ThinListCollection<T> : ICollection<T>, IReadOnlyCollection<T>
     {
         private readonly ThinList<T> thinList;
 
@@ -58,15 +79,9 @@ namespace CodeRedundancyCheck.Common
             this.thinList = thinList;
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return new ThinListEnumerator<T>(thinList);
-        }
+        public int Count => this.thinList.Length;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        public bool IsReadOnly => true;
 
         public void Add(T item)
         {
@@ -80,7 +95,7 @@ namespace CodeRedundancyCheck.Common
 
         public bool Contains(T item)
         {
-            throw new NotImplementedException();
+            return this.thinList.Contains(item);
         }
 
         public void CopyTo(T[] array, int arrayIndex)
@@ -88,58 +103,56 @@ namespace CodeRedundancyCheck.Common
             Array.Copy(this.thinList.array, arrayIndex, array, 0, this.Count - arrayIndex);
         }
 
+        public IEnumerator<T> GetEnumerator()
+        {
+            return new ThinListEnumerator<T>(this.thinList);
+        }
+
         public bool Remove(T item)
         {
             throw new NotImplementedException();
         }
 
-        public int Count => this.thinList.Length;
-
-        public bool IsReadOnly => true;
-    }
-
-    internal struct ThinListEnumerator<T> : IEnumerator<T>
-    {
-        private readonly ThinList<T> thinList;
-
-        private int position;
-
-        private int length;
-
-        private T[] array;
-
-        public ThinListEnumerator(ThinList<T> thinList)
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            this.thinList = thinList;
-            this.position = -1;
-            this.length = thinList.Length;
-            this.array = thinList.array;
+            return this.GetEnumerator();
         }
 
-        public void Dispose()
+        internal struct ThinListEnumerator<T> : IEnumerator<T>
         {
-        }
+            private readonly ThinList<T> thinList;
 
-        public bool MoveNext()
-        {
-            this.position++;
+            private T[] array;
 
-            return this.position < this.length;
+            private int length;
 
-        }
+            private int position;
 
-        public void Reset()
-        {
-            this.position = -1;
-        }
-
-        public T Current => this.array[this.position];
-
-        object IEnumerator.Current
-        {
-            get
+            public ThinListEnumerator(ThinList<T> thinList)
             {
-                return this.Current;
+                this.thinList = thinList;
+                this.position = -1;
+                this.length = thinList.Length;
+                this.array = thinList.array;
+            }
+
+            public T Current => this.array[this.position];
+
+            object IEnumerator.Current => this.Current;
+
+            public void Dispose()
+            {
+            }
+
+            public bool MoveNext()
+            {
+                this.position++;
+                return this.position < this.length;
+            }
+
+            public void Reset()
+            {
+                this.position = -1;
             }
         }
     }

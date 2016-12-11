@@ -4,6 +4,8 @@ using CodeRedundancyCheck.Model;
 
 namespace CodeRedundancyCheck
 {
+    using CodeRedundancyCheck.Common;
+
     public class CodeFile
     {
         public string Filename { get; set; }
@@ -14,7 +16,7 @@ namespace CodeRedundancyCheck
 
         public CodeLine[] AllSourceLines { get; set; }
 
-        public Dictionary<int, List<CodeLine>> CodeLinesDictionary { get; set; }
+        public Dictionary<int, ThinList<CodeLine>> CodeLinesDictionary { get; set; }
     }
 
 }
