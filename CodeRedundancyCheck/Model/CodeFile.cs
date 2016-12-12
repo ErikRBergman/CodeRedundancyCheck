@@ -16,7 +16,8 @@ namespace CodeRedundancyCheck
 
         public CodeLine[] AllSourceLines { get; set; }
 
-        public Dictionary<int, ThinList<CodeLine>> CodeLinesDictionary { get; set; }
+//        public Dictionary<int, ThinList<CodeLine>> CodeLinesDictionary { get; set; }
+        public DivideAndConquerDictionary<ThinList<CodeLine>> CodeLinesDictionary { get; set; }
     }
 
 }

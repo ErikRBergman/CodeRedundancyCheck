@@ -83,6 +83,7 @@
     <Otherwise />
   </Choose>
   <ItemGroup>
+    <Compile Include="Common\DivideAndConquerDictionaryTests.cs" />
     <Compile Include="TestAll.cs" />
     <Compile Include="VisualBasicWashTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
