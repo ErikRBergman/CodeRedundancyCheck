@@ -75,8 +75,10 @@ namespace CodeRedundancyCheck.Common
                 }
 
 
+                var halfRangeLength = rangeLength >> 1;
+
                 // divided by 2 is always floor
-                var midpointIndex = rangeIndex + (rangeLength / 2);
+                var midpointIndex = rangeIndex + halfRangeLength;
 
                 var midPointKey = this.keys[midpointIndex];
 
@@ -86,17 +88,8 @@ namespace CodeRedundancyCheck.Common
                 // var zz = this.keys[rangeIndex + rangeLength - 1];
 
 
-                // Play around chaning order of the if statements when it's working
-                if (midPointKey == key)
-                {
-                    value = this.values[midpointIndex];
-                    return true;
-                }
-
                 var rangeLengthOdd = (rangeLength & 1) == 0;
-
-                rangeLength = rangeLength / 2;
-
+                rangeLength = halfRangeLength;
 
                 if (key > midPointKey)
                 {
@@ -106,11 +99,19 @@ namespace CodeRedundancyCheck.Common
                     {
                         rangeLength--;
                     }
-//                    rangeLength--;
+
+                    continue;
                 }
                 else
                 {
                     // rangeIndex remains the same
+
+                    // Play around chaning order of the if statements when it's working
+                    if (midPointKey == key)
+                    {
+                        value = this.values[midpointIndex];
+                        return true;
+                    }
                 }
 
             }
