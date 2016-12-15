@@ -5,6 +5,8 @@ using CodeRedundancyCheck.Extensions;
 
 namespace CodeRedundancyCheck
 {
+    using System.Collections.Concurrent;
+
     public class CodeMatch
     {
         private string uniqueId;
@@ -23,7 +25,7 @@ namespace CodeRedundancyCheck
             set { this.uniqueId = value; }
         }
 
-        public List<CodeFileMatch> CodeFileMatches { get; set; }
+        public ConcurrentBag<CodeFileMatch> CodeFileMatches { get; set; }
 
         public int Lines { get; set; }
 
@@ -54,7 +56,12 @@ namespace CodeRedundancyCheck
 
             if (this.CodeFileMatches != null && this.CodeFileMatches.Count > 0)
             {
-                text = text + ", First match: " + this.CodeFileMatches[0];
+                CodeFileMatch match;
+
+                if (this.CodeFileMatches.TryPeek(out match))
+                {
+                    text = text + ", First match: " + match;
+                }
             }
 
 

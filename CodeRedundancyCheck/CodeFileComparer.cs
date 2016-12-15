@@ -1,53 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CodeRedundancyCheck.Extensions;
-using CodeRedundancyCheck.Interface;
-using CodeRedundancyCheck.Model;
-
-namespace CodeRedundancyCheck
+﻿namespace CodeRedundancyCheck
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     using CodeRedundancyCheck.Common;
+    using CodeRedundancyCheck.Extensions;
+    using CodeRedundancyCheck.Interface;
+    using CodeRedundancyCheck.Model;
 
     public class CodeFileComparer
     {
+        const int MaxNumberOfLinesInBlock = 100000;
+
         public ICodeLineFilter CodeLineFilter { get; set; }
 
-        public Task<List<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, CodeFile firstCodeFile, params CodeFile[] codeFiles)
+        public Task<IReadOnlyCollection<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, CodeFile firstCodeFile, params CodeFile[] codeFiles)
         {
             var files = new List<CodeFile>(codeFiles)
-            {
-                firstCodeFile
-            };
+                        {
+                            firstCodeFile
+                        };
 
             return this.GetMatchesAsync(minimumMatchingLines, files);
         }
 
-        public Task<List<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, IEnumerable<CodeFile> codeFiles)
+        public async Task<IReadOnlyCollection<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, IEnumerable<CodeFile> codeFiles, int concurrencyLevel = -1)
         {
-            var codeFileList = codeFiles as CodeFile[] ?? codeFiles.ToArray();
+            var codeFileArray = codeFiles as CodeFile[] ?? codeFiles.ToArray();
 
-            for (int i = 0; i < codeFileList.Length; i++)
+            for (var i = 0; i < codeFileArray.Length; i++)
             {
-                codeFileList[i].UniqueId = i;
+                codeFileArray[i].UniqueId = i;
             }
 
-            var comparables = new HashSet<CodeFile>(codeFileList);
+            var codeFileQueue = new ConcurrentQueue<CodeFile>(codeFileArray);
+            var result = new ConcurrentDictionary<long, CodeMatch>(Environment.ProcessorCount * 4, 50000);
 
-            if (comparables.Count < 1)
+            if (concurrencyLevel < 1)
             {
-                throw new Exception("At least one files must be matched (with itself)");
+                concurrencyLevel = Environment.ProcessorCount * 4;
             }
 
-            var codeFileQueue = new Queue<CodeFile>(codeFileList);
+            var tasks = new Task[concurrencyLevel];
 
-            var result = new Dictionary<long, CodeMatch>(50000);
+            for (int i = 0; i < concurrencyLevel; i++)
+            {
+                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result));
+            }
 
-            const int MaxNumberOfLinesInBlock = 100000;
+            await Task.WhenAll(tasks);
 
+            return result.Values.ToArray();
+        }
+
+        private static long GetBlockKey(int uniqueId, CodeLine[] codeLines, int matchingLineCount)
+        {
+            return GetBlockKey(uniqueId, codeLines[0], matchingLineCount);
+        }
+
+        private static long GetBlockKey(int uniqueId, CodeLine codeLine, int matchingLineCount)
+        {
+            return GetBlockKey(uniqueId, codeLine.CodeFileLineIndex, matchingLineCount);
+        }
+
+        private static long GetBlockKey(int uniqueId, int codeFileLineIndex, int matchingLineCount)
+        {
+            return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
+        }
+
+        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<long, CodeMatch> result)
+        {
             var sourceLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
             var compareLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
 
@@ -55,14 +81,21 @@ namespace CodeRedundancyCheck
 
             var filter = this.CodeLineFilter;
 
+//             uint matchingMiniHashLinePattern 
+
             while (codeFileQueue.Count > 0)
             {
-                var sourceFile = codeFileQueue.Dequeue();
+                CodeFile sourceFile;
+
+                if (!codeFileQueue.TryDequeue(out sourceFile))
+                {
+                    break;
+                }
 
                 var allSourceLines = sourceFile.CodeLines;
-                var allSourceLinesCount = sourceFile.CodeLines.Length;
+                var allSourceLinesCount = allSourceLines.Length;
 
-                foreach (var compareFile in comparables)
+                foreach (var compareFile in codeFileArray)
                 {
                     var allCompareFileLines = compareFile.CodeLines;
                     var allCompareFileLinesCount = allCompareFileLines.Length;
@@ -84,12 +117,10 @@ namespace CodeRedundancyCheck
                             continue;
                         }
 
-
                         var lineArrayMatches = lineMatches.array;
+                        var lineMatchesCount = lineMatches.length;
 
-                        int lineMatchesCount = lineMatches.length;
-
-                        for (int index = 0; index < lineMatchesCount; index++)
+                        for (var index = 0; index < lineMatchesCount; index++)
                         {
                             var lineMatch = lineArrayMatches[index];
                             var lineMatchIndex = lineMatch.CodeFileLineIndex;
@@ -106,12 +137,12 @@ namespace CodeRedundancyCheck
                                 var sourceFileLineIndexTemp = sourceFileLineIndex;
 
                                 // If comparing to ourself, start checking one line below the current one
-                                int compareFileLineIndex = lineMatchIndex;
+                                var compareFileLineIndex = lineMatchIndex;
 
                                 // Only compare to forward to the match we found or circular findings would occur
                                 var lastSourceLine = compareFile == sourceFile ? lineMatchIndex : allSourceLinesCount;
 
-                                int matchingLineCount = 0;
+                                var matchingLineCount = 0;
 
                                 var compareFileLineIndexTemp = compareFileLineIndex;
 
@@ -145,17 +176,16 @@ namespace CodeRedundancyCheck
                                     continue;
                                 }
                             }
-
                             {
                                 var sourceFileLineIndexTemp = sourceFileLineIndex;
 
                                 // If comparing to ourself, start checking one line below the current one
-                                int compareFileLineIndex = lineMatchIndex;
+                                var compareFileLineIndex = lineMatchIndex;
 
                                 // Only compare to forward to the match we found or circular findings would occur
                                 var lastSourceLine = compareFile == sourceFile ? lineMatchIndex : allSourceLinesCount;
 
-                                int matchingLineCount = 0;
+                                var matchingLineCount = 0;
 
                                 var compareFileLineIndexTemp = compareFileLineIndex;
 
@@ -195,25 +225,28 @@ namespace CodeRedundancyCheck
                                         addedBlocks.AddMultiple(sourceLinesKey, compareLinesKey);
 
                                         //// Remove target blocks that are part of the added block
-                                        for (int i = 1; i < matchingLineCount; i++)
+                                        for (var i = 1; i < matchingLineCount; i++)
                                         {
                                             var compareLinesKeyTemp = GetBlockKey(compareFile.UniqueId, compareLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
                                             var sourceLinesKeyTemp = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
                                             addedBlocks.AddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp);
                                         }
 
-                                        CodeMatch match;
-                                        if (result.TryGetValue(sourceLinesKey, out match) == false)
-                                        {
-                                            match = new CodeMatch
+                                        var match = result.GetOrAdd(
+                                            sourceLinesKey,
+                                            key =>
+                                                {
+                                                    var cmatch = new CodeMatch
                                                     {
-                                                        CodeFileMatches = new List<CodeFileMatch>(),
+                                                        CodeFileMatches = new ConcurrentBag<CodeFileMatch>(),
                                                         Lines = matchingLineCount
                                                     };
 
-                                            match.CodeFileMatches.Add(new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLines.AsCollection())));
-                                            result.Add(sourceLinesKey, match);
-                                        }
+                                                    cmatch.CodeFileMatches.Add(new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLines.AsCollection())));
+                                                    result.TryAdd(sourceLinesKey, cmatch);
+
+                                                    return cmatch;
+                                                });
 
                                         match.CodeFileMatches.Add(new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection())));
                                     }
@@ -223,36 +256,6 @@ namespace CodeRedundancyCheck
                     }
                 }
             }
-
-            return Task.FromResult(result.Values.ToList());
         }
-
-        private static long GetBlockKey(int uniqueId, CodeLine[] codeLines, int matchingLineCount)
-        {
-            return GetBlockKey(uniqueId, codeLines[0], matchingLineCount);
-        }
-
-        private static long GetBlockKey(int uniqueId, CodeLine codeLine, int matchingLineCount)
-        {
-            return GetBlockKey(uniqueId, codeLine.CodeFileLineIndex, matchingLineCount);
-        }
-
-        private static long GetBlockKey(int uniqueId, int codeFileLineIndex, int matchingLineCount)
-        {
-            return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
-
-            //            return uniqueId + "_" + codeFileLineIndex + "_" + matchingLineCount;
-        }
-        
-        public IEnumerable<CodeLine> LoadFileData(string filename)
-        {
-            return File.ReadAllLines(filename).Select((text, lineNumber) =>
-            new CodeLine(
-                originalLineText: text,
-                originalLineNumber: lineNumber + 1,
-                originalLinePosition: 0));
-        }
-
-
     }
 }

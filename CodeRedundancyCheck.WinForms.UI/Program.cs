@@ -43,10 +43,15 @@ namespace CodeRedundancyCheck.WinForms.UI
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
             codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
-            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
+            // C:\Projects\celsa
+//            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
+
+            var files = Directory.GetFiles(@"C:\Projects\celsa\", "*.cs", SearchOption.AllDirectories)
                 .Where(
                 f => !f.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase)
                 && !f.EndsWith(".designer.cs", StringComparison.OrdinalIgnoreCase)
+                && !f.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
+                && !f.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase)
                 ).ToArray();
 
             var codeFiles = new List<CodeFile>(files.Length);
@@ -58,7 +63,8 @@ namespace CodeRedundancyCheck.WinForms.UI
                 codeFiles.Add(file);
             }
 
-            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+//            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles, 1)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();

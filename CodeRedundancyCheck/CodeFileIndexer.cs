@@ -62,6 +62,20 @@ namespace CodeRedundancyCheck
                 list.Add(line);
             }
 
+            uint runningHash = 0;
+
+            for (int index = codeFile.CodeLines.Length - 1; index > -1; index--)
+            {
+                var line = codeFile.CodeLines[index];
+
+                if (line.IsCodeLine)
+                {
+                    line.Next4MiniHash = runningHash;
+                    runningHash <<= 8;
+                    runningHash |= (byte)(line.WashedLineHashCode & 0xFF);
+                }
+            }
+
             codeFile.CodeLinesDictionary = new DivideAndConquerDictionary<ThinList<CodeLine>>(dictionary);
         }
     }

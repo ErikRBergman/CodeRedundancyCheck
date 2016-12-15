@@ -32,11 +32,13 @@
 
         public int OriginalLinePosition { get; set; }
 
-        public int CodeFileLineIndex; // { get; set; }
+        public int CodeFileLineIndex;
 
-        public string WashedLineText; // { get; set; }
+        public string WashedLineText;
 
         public int WashedLineHashCode;
+
+        public uint Next4MiniHash;
 
         public string WriteableLine
         {

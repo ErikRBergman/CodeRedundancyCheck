@@ -84,10 +84,6 @@ namespace CodeRedundancyCheck.Common
 
                 // Debug.WriteLine("Midpoint index: " + midpointIndex);
 
-
-                // var zz = this.keys[rangeIndex + rangeLength - 1];
-
-
                 var rangeLengthOdd = (rangeLength & 1) == 0;
                 rangeLength = halfRangeLength;
 
