@@ -40,7 +40,7 @@ namespace CodeRedundancyCheck.WinForms.UI
         {
             var codeFileComparer = new CodeFileComparer();
 
-            var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer());
+            var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(0xFFFFFFFF), new CodeFileLineIndexer());
             codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
             // C:\Projects\celsa
@@ -64,7 +64,7 @@ namespace CodeRedundancyCheck.WinForms.UI
             }
 
 //            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
-            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles, 1)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();

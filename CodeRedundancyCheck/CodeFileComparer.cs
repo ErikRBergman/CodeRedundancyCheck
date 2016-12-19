@@ -81,8 +81,6 @@
 
             var filter = this.CodeLineFilter;
 
-//             uint matchingMiniHashLinePattern 
-
             while (codeFileQueue.Count > 0)
             {
                 CodeFile sourceFile;
@@ -120,9 +118,17 @@
                         var lineArrayMatches = lineMatches.array;
                         var lineMatchesCount = lineMatches.length;
 
+                        uint sourceLineNext4MiniHash = sourceLine.Next4MiniHash;
+
                         for (var index = 0; index < lineMatchesCount; index++)
                         {
                             var lineMatch = lineArrayMatches[index];
+
+                            if (sourceLineNext4MiniHash != lineMatch.Next4MiniHash)
+                            {
+                                continue;
+                            }
+
                             var lineMatchIndex = lineMatch.CodeFileLineIndex;
 
                             if (compareFile == sourceFile)
@@ -256,6 +262,26 @@
                     }
                 }
             }
+        }
+
+        private static uint GetMinihashComparePattern(int minimumMatchingLines)
+        {
+            if (minimumMatchingLines >= 4)
+            {
+                return 0xFFFFFFFF;
+            }
+
+            if (minimumMatchingLines == 3)
+            {
+                return 0x0000FFFF;
+            }
+
+            if (minimumMatchingLines == 2)
+            {
+                return 0x000000FF;
+            }
+
+            return 0x0;
         }
     }
 }
