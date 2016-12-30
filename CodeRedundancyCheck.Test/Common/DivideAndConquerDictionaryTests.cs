@@ -117,14 +117,14 @@ namespace CodeRedundancyCheck.Test.Common
         }
 
 
-        private static IEnumerable<KeyValuePair<int, int>> GetPairFromInts(params int[] values)
+        private static ICollection<KeyValuePair<int, int>> GetPairFromInts(params int[] values)
         {
-            return values.Select(v => new KeyValuePair<int, int>(v, v));
+            return values.Select(v => new KeyValuePair<int, int>(v, v)).ToArray();
         }
 
-        private static IEnumerable<KeyValuePair<int, int>> GetPairFromInts(IEnumerable<int> values)
+        private static ICollection<KeyValuePair<int, int>> GetPairFromInts(IEnumerable<int> values)
         {
-            return values.Select(v => new KeyValuePair<int, int>(v, v));
+            return values.Select(v => new KeyValuePair<int, int>(v, v)).ToArray();
         }
     }
 }

@@ -1,23 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CodeRedundancyCheck.Interface;
-using CodeRedundancyCheck.Model;
-
-namespace CodeRedundancyCheck
+﻿namespace CodeRedundancyCheck
 {
+    using System;
     using System.Collections.Concurrent;
-    using System.Threading;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using CodeRedundancyCheck.Interface;
+    using CodeRedundancyCheck.Model;
 
     public class CodeFileLoader : ICodeFileLoader
     {
-        private readonly ISourceWash sourceWash;
+        private static readonly int ProcessorCount = Environment.ProcessorCount;
+
         private readonly ICodeFileIndexer indexer;
-        private readonly ICodeFileLineIndexer lineIndexer;
+
         private readonly ICodeLineFilter lineFilter;
+
+        private readonly ICodeFileLineIndexer lineIndexer;
+
+        private readonly ISourceWash sourceWash;
 
         public CodeFileLoader(ISourceWash sourceWash, ICodeFileIndexer indexer, ICodeFileLineIndexer lineIndexer, ICodeLineFilter lineFilter)
         {
@@ -27,24 +31,76 @@ namespace CodeRedundancyCheck
             this.lineFilter = lineFilter;
         }
 
-        private class CodeFileItem
+        public async Task<CodeFile> LoadCodeFileAsync(Stream codeFileStream, Encoding encoding, bool leaveStreamOpen = false)
         {
-            public CodeFileItem(string filename, Func<Task<CodeFile>> codeFile)
+            var lines = new List<CodeLine>(10000);
+
+            var lineNumber = 0;
+
+            string fullSource;
+            using (var reader = new StreamReader(codeFileStream, encoding, true, 4096, leaveStreamOpen))
             {
-                this.Filename = filename;
-                this.Func = codeFile;
+                fullSource = await reader.ReadToEndAsync();
             }
 
-            public string Filename { get; private set; }
+            var lineBuilder = new StringBuilder(4096);
 
-            public Func<Task<CodeFile>> Func { get; private set; }
+            var lastNewLineChar = false;
 
-            public CodeFile CodeFile { get; set; }
+            foreach (var ch in fullSource)
+            {
+                if (ch == '\r' || ch == '\n')
+                {
+                    if (lastNewLineChar)
+                    {
+                        lastNewLineChar = false;
+                        continue;
+                    }
 
+                    lastNewLineChar = true;
+
+                    var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
+                    lines.Add(codeLine);
+
+                    lineBuilder.Clear();
+                }
+
+                lineBuilder.Append(ch);
+                lastNewLineChar = false;
+            }
+
+            if (lineBuilder.Length > 0)
+            {
+                var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
+                lines.Add(codeLine);
+            }
+
+            var allWashedLines = this.sourceWash.Wash(lines).ToArray();
+
+            var codeFile = new CodeFile
+                           {
+                               CodeLines = allWashedLines.Where(line => line.IsCodeLine).ToArray(),
+                               AllSourceLines = allWashedLines
+                           };
+
+            this.lineIndexer.IndexCodeFile(codeFile);
+            this.indexer.IndexCodeFile(codeFile);
+
+            foreach (var codeLine in allWashedLines)
+            {
+                codeLine.MayStartBlock = this.lineFilter.MayStartBlock(codeLine);
+            }
+
+            return codeFile;
         }
 
         public async Task<IReadOnlyCollection<CodeFile>> LoadCodeFiles(IReadOnlyCollection<string> filenames, Encoding encoding, int concurrencyLevel = -1)
         {
+            if (concurrencyLevel < 1)
+            {
+                concurrencyLevel = ProcessorCount;
+            }
+
             var codeFileItems = new List<CodeFileItem>(filenames.Count);
 
             foreach (var filename in filenames.OrderBy(f => f))
@@ -79,7 +135,6 @@ namespace CodeRedundancyCheck
             }
 
             return await this.LoadCodeFileAsync(buffer, encoding);
-
         }
 
         private async Task LoadCodeFileItemFromQueueAsync(ConcurrentQueue<CodeFileItem> items)
@@ -92,68 +147,19 @@ namespace CodeRedundancyCheck
             }
         }
 
-        public async Task<CodeFile> LoadCodeFileAsync(Stream codeFileStream, Encoding encoding, bool leaveStreamOpen = false)
+        private class CodeFileItem
         {
-            var lines = new List<CodeLine>(10000);
-
-            int lineNumber = 0;
-
-            string fullSource;
-            using (var reader = new StreamReader(codeFileStream, encoding, true, 4096, leaveStreamOpen))
+            public CodeFileItem(string filename, Func<Task<CodeFile>> codeFile)
             {
-                fullSource = await reader.ReadToEndAsync();
+                this.Filename = filename;
+                this.Func = codeFile;
             }
 
-            var lineBuilder = new StringBuilder(4096);
+            public CodeFile CodeFile { get; set; }
 
-            bool lastNewLineChar = false;
+            public string Filename { get; private set; }
 
-            foreach (var ch in fullSource)
-            {
-                if (ch == '\r' || ch == '\n')
-                {
-                    if (lastNewLineChar)
-                    {
-                        lastNewLineChar = false;
-                        continue;
-                    }
-
-                    lastNewLineChar = true;
-
-                    var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
-                    lines.Add(codeLine);
-
-                    lineBuilder.Clear();
-                }
-
-                lineBuilder.Append(ch);
-            }
-
-            if (lineBuilder.Length > 0)
-            {
-                var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
-                lines.Add(codeLine);
-            }
-
-            var allWashedLines = this.sourceWash.Wash(lines).ToArray();
-
-            var codeFile = new CodeFile
-            {
-                CodeLines = allWashedLines.Where(line => line.IsCodeLine).ToArray(),
-                AllSourceLines = allWashedLines
-            };
-
-            this.lineIndexer.IndexCodeFile(codeFile);
-            this.indexer.IndexCodeFile(codeFile);
-
-            foreach (var codeLine in allWashedLines)
-            {
-                codeLine.MayStartBlock = this.lineFilter.MayStartBlock(codeLine);
-            }
-
-            return codeFile;
-
+            public Func<Task<CodeFile>> Func { get; private set; }
         }
-
     }
 }

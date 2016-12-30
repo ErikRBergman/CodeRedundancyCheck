@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="CodeFileLoader.cs" />
     <Compile Include="Common\DivideAndConquerDictionary.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="ThinList.cs" />
     <Compile Include="Extensions\HashSetExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
