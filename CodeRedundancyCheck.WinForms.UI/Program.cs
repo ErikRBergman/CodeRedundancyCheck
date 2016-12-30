@@ -61,21 +61,18 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var loadFileStopwatch = Stopwatch.StartNew();
 
-            var codeFiles = await loader.LoadCodeFiles(files, Encoding.Default, 1);
+            var codeFiles = await loader.LoadCodeFiles(files, Encoding.Default, 8);
 
             loadFileStopwatch.Stop();
 
             Console.WriteLine("Load files took " + loadFileStopwatch.ElapsedMilliseconds + "ms");
 
-            var blockStopwatch = Stopwatch.StartNew();
-
-            Console.WriteLine("Finding duplicate blocks..");
-            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
-            var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
-
-            Console.WriteLine("Finding duplicate blocks took " + blockStopwatch.ElapsedMilliseconds + "ms");
-
-            stopwatch.Stop();
+            //var blockStopwatch = Stopwatch.StartNew();
+            //Console.WriteLine("Finding duplicate blocks..");
+            //var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
+            //var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
+            //Console.WriteLine("Finding duplicate blocks took " + blockStopwatch.ElapsedMilliseconds + "ms");
+            //stopwatch.Stop();
             
             Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
 

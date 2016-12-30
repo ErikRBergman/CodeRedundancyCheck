@@ -43,55 +43,46 @@ namespace CodeRedundancyCheck
 
         }
 
-        public async Task<IReadOnlyCollection<CodeFile>> LoadCodeFiles(IReadOnlyCollection<string> filenames, Encoding encoding, int concurrencyLevel)
+        public async Task<IReadOnlyCollection<CodeFile>> LoadCodeFiles(IReadOnlyCollection<string> filenames, Encoding encoding, int concurrencyLevel = -1)
         {
-            var loadFileTasks = new List<CodeFileItem>(filenames.Count);
-
-            var semaphore = new SemaphoreSlim(1);
+            var codeFileItems = new List<CodeFileItem>(filenames.Count);
 
             foreach (var filename in filenames.OrderBy(f => f))
             {
-                loadFileTasks.Add(new CodeFileItem(filename, () => this.LoadBufferedCodeFile(filename, encoding, semaphore)));
+                codeFileItems.Add(new CodeFileItem(filename, () => this.LoadBufferedCodeFile(filename, encoding)));
             }
 
             var tasks = new List<Task>(concurrencyLevel);
 
+            var codeFileItemQueue = new ConcurrentQueue<CodeFileItem>(codeFileItems);
+
             for (var i = 0; i < concurrencyLevel; i++)
             {
-                tasks.Add(Task.Run(() => this.Load(new ConcurrentQueue<CodeFileItem>(loadFileTasks), semaphore)));
+                tasks.Add(Task.Run(() => this.LoadCodeFileItemFromQueueAsync(codeFileItemQueue)));
             }
 
             await Task.WhenAll(tasks);
 
-            return loadFileTasks.Select(t => t.CodeFile).ToArray();
+            return codeFileItems.Select(t => t.CodeFile).ToArray();
         }
 
-        private async Task<CodeFile> LoadBufferedCodeFile(string filename, Encoding encoding, SemaphoreSlim semaphore)
+        private async Task<CodeFile> LoadBufferedCodeFile(string filename, Encoding encoding)
         {
             MemoryStream buffer;
 
-            try
+            using (var stream = File.OpenRead(filename))
             {
-                await semaphore.WaitAsync();
-
-                using (var stream = File.OpenRead(filename))
-                {
-                    var length = stream.Length;
-                    buffer = new MemoryStream((int)length);
-                    await stream.CopyToAsync(buffer);
-                    buffer.Position = 0;
-                }
-            }
-            finally
-            {
-                semaphore.Release();
+                var length = stream.Length;
+                buffer = new MemoryStream((int)length);
+                await stream.CopyToAsync(buffer);
+                buffer.Position = 0;
             }
 
             return await this.LoadCodeFileAsync(buffer, encoding);
 
         }
 
-        private async Task Load(ConcurrentQueue<CodeFileItem> items, SemaphoreSlim semaphore)
+        private async Task LoadCodeFileItemFromQueueAsync(ConcurrentQueue<CodeFileItem> items)
         {
             CodeFileItem item;
 
@@ -107,20 +98,41 @@ namespace CodeRedundancyCheck
 
             int lineNumber = 0;
 
+            string fullSource;
             using (var reader = new StreamReader(codeFileStream, encoding, true, 4096, leaveStreamOpen))
             {
-                //var fullSource = reader.ReadToEndAsync();
-                //var lineBuilder = new StringBuilder(256);
+                fullSource = await reader.ReadToEndAsync();
+            }
 
+            var lineBuilder = new StringBuilder(4096);
 
+            bool lastNewLineChar = false;
 
-
-                while (reader.EndOfStream == false)
+            foreach (var ch in fullSource)
+            {
+                if (ch == '\r' || ch == '\n')
                 {
-                    var line = await reader.ReadLineAsync();
-                    var codeLine = new CodeLine(line, ++lineNumber, 0);
+                    if (lastNewLineChar)
+                    {
+                        lastNewLineChar = false;
+                        continue;
+                    }
+
+                    lastNewLineChar = true;
+
+                    var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
                     lines.Add(codeLine);
+
+                    lineBuilder.Clear();
                 }
+
+                lineBuilder.Append(ch);
+            }
+
+            if (lineBuilder.Length > 0)
+            {
+                var codeLine = new CodeLine(lineBuilder.ToString(), ++lineNumber, 0);
+                lines.Add(codeLine);
             }
 
             var allWashedLines = this.sourceWash.Wash(lines).ToArray();
