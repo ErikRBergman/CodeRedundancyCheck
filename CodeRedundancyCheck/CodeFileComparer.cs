@@ -202,7 +202,7 @@
                                 sourceLines.Clear();
                                 compareLines.Clear();
 
-                                while (sourceLine.WashedLineHashCode == compareLine.WashedLineHashCode && string.Compare(sourceLine.WashedLineText, compareLine.WashedLineText, StringComparison.OrdinalIgnoreCase) == 0)
+                                while (sourceLine.WashedLineHashCode == compareLine.WashedLineHashCode && string.Compare(sourceLine.WashedLineText, compareLine.WashedLineText, StringComparison.Ordinal) == 0)
                                 {
                                     sourceLines.Add(sourceLine);
                                     compareLines.Add(compareLine);

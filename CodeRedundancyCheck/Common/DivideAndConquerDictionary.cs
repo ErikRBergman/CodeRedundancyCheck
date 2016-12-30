@@ -1,26 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CodeRedundancyCheck.Common
+﻿namespace CodeRedundancyCheck.Common
 {
-    using System.Diagnostics;
+    using System.Collections.Generic;
+    using System.Linq;
 
     public class DivideAndConquerDictionary<T>
     {
-        private readonly int[] keys;
-
-        private readonly T[] values;
-
         public readonly int Length;
 
         private readonly bool isPadded = false;
 
-        public int[] Keys => this.keys;
+        private readonly int[] keys;
 
-        public IEnumerable<T> Values => this.values;
+        private readonly T[] values;
 
         public DivideAndConquerDictionary(IEnumerable<KeyValuePair<int, T>> items)
         {
@@ -33,35 +24,38 @@ namespace CodeRedundancyCheck.Common
                 this.isPadded = true;
             }
 
-            //while ((itemsList.Count & 3) != 3)
-            //{
-            //    itemsList.Add(new KeyValuePair<int, T>(0, default(T)));
-            //    this.isPadded = true;
-            //}
-
-
+            // while ((itemsList.Count & 3) != 3)
+            // {
+            // itemsList.Add(new KeyValuePair<int, T>(0, default(T)));
+            // this.isPadded = true;
+            // }
             this.keys = itemsList.Select(i => i.Key).ToArray();
             this.values = itemsList.Select(i => i.Value).ToArray();
             this.Length = itemsList.Count;
         }
+
+        public int[] Keys => this.keys;
+
+        public IEnumerable<T> Values => this.values;
 
         public bool TryGetValue(int key, out T value)
         {
             var rangeLength = this.Length;
             var rangeIndex = 0;
 
-            int iterationCount = 0;
-
+            // int iterationCount = 0;
             do
             {
-                iterationCount++;
+                // iterationCount++;
 
                 // Debug.WriteLine("Iteration: " + iterationCount + ", rangeIndex: " + rangeIndex + ", rangeLength: " + rangeLength + ", last range index: " + (rangeIndex + rangeLength - 1) + ", length last bit: " + (rangeLength & 1));
 
                 // for puny ranges
                 if (rangeLength < 3)
                 {
-                    for (int i = rangeIndex; i < rangeIndex + rangeLength; i++)
+                    var maxValue = rangeIndex + rangeLength;
+
+                    for (var i = rangeIndex; i < maxValue; i++)
                     {
                         if (this.keys[i] == key)
                         {
@@ -74,24 +68,21 @@ namespace CodeRedundancyCheck.Common
                     return false;
                 }
 
-
                 var halfRangeLength = rangeLength >> 1;
 
-                // divided by 2 is always floor
                 var midpointIndex = rangeIndex + halfRangeLength;
 
                 var midPointKey = this.keys[midpointIndex];
 
                 // Debug.WriteLine("Midpoint index: " + midpointIndex);
-
-                var rangeLengthOdd = (rangeLength & 1) == 0;
+                var isRangeLengthEven = (rangeLength & 1) == 0;
                 rangeLength = halfRangeLength;
 
                 if (key > midPointKey)
                 {
                     rangeIndex = midpointIndex + 1;
 
-                    if (rangeLengthOdd)
+                    if (isRangeLengthEven)
                     {
                         rangeLength--;
                     }
@@ -109,12 +100,8 @@ namespace CodeRedundancyCheck.Common
                         return true;
                     }
                 }
-
             }
             while (true);
-
         }
-
-
     }
 }

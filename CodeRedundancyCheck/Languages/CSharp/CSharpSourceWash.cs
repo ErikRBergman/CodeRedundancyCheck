@@ -39,7 +39,7 @@
 
             for (int index = 0; index < codeLength; index++)
             {
-                var ch = sourceCode[index];
+                var ch = char.ToLowerInvariant(sourceCode[index]);
 
                 bool isWhitespace = char.IsWhiteSpace(ch);
 
@@ -79,7 +79,7 @@
                             {
                                 // Escaped double quotes
                                 index++;
-                                builder.Append(sourceCode[index]);
+                                builder.Append(char.ToLowerInvariant(sourceCode[index]));
 
                                 endText = false;
                             }

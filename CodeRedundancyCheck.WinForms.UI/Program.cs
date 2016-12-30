@@ -46,6 +46,8 @@ namespace CodeRedundancyCheck.WinForms.UI
             // C:\Projects\celsa
 //            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
 
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             var files = Directory.GetFiles(@"C:\Projects\celsa\", "*.cs", SearchOption.AllDirectories)
                 .Where(
                 f => !f.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase)
@@ -66,6 +68,10 @@ namespace CodeRedundancyCheck.WinForms.UI
 //            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
             var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
+
+            stopwatch.Stop();
+            
+            Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
 
             var commentedMatches = new HashSet<CodeFile>();
 

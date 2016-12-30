@@ -8,16 +8,15 @@ namespace CodeRedundancyCheck
 
     public class CodeFile
     {
-        public string Filename { get; set; }
+        public string Filename;
 
-        public int UniqueId { get; set; }
+        public int UniqueId;
 
-        public CodeLine[] CodeLines { get; set; }
+        public CodeLine[] CodeLines;
 
-        public CodeLine[] AllSourceLines { get; set; }
+        public CodeLine[] AllSourceLines;
 
-//        public Dictionary<int, ThinList<CodeLine>> CodeLinesDictionary { get; set; }
-        public DivideAndConquerDictionary<ThinList<CodeLine>> CodeLinesDictionary { get; set; }
+        public DivideAndConquerDictionary<ThinList<CodeLine>> CodeLinesDictionary;
     }
 
 }
