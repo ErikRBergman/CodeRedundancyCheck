@@ -12,7 +12,7 @@ namespace CodeRedundancyCheck.VisualBasic
     {
         public static ICodeLineFilter Singleton { get; } = new VisualBasicCodeLineFilter();
 
-        public bool MayStartBlock(CodeLine codeLine, CodeFile codeFile)
+        public bool MayStartBlock(CodeLine codeLine)
         {
 
             // never start with "end if"

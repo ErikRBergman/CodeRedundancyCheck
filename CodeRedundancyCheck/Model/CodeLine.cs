@@ -40,6 +40,8 @@
 
         public uint Next4MiniHash;
 
+        public bool MayStartBlock = false;
+
         public string WriteableLine
         {
             get

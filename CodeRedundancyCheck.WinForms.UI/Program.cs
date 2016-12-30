@@ -40,7 +40,7 @@ namespace CodeRedundancyCheck.WinForms.UI
         {
             var codeFileComparer = new CodeFileComparer();
 
-            var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(0xFFFFFFFF), new CodeFileLineIndexer());
+            var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(0xFFFFFFFF), new CodeFileLineIndexer(), CSharpCodeLineFilter.Singleton);
             codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
             // C:\Projects\celsa

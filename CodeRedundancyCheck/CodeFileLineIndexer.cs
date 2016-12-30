@@ -12,7 +12,7 @@ namespace CodeRedundancyCheck
     {
         public void IndexCodeFile(CodeFile codeFile)
         {
-            IndexCollection(codeFile.CodeLines, CollectionType.CodeFileLineIndex );
+            IndexCollection(codeFile.CodeLines, CollectionType.CodeFileLineIndex);
             IndexCollection(codeFile.AllSourceLines, CollectionType.OriginalFileLineIndex);
         }
 

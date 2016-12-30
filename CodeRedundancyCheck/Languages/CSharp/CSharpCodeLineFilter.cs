@@ -26,7 +26,7 @@
             }
         }
 
-        public bool MayStartBlock(CodeLine codeLine, CodeFile codeFile)
+        public bool MayStartBlock(CodeLine codeLine)
         {
             if (codeLine.WashedLineHashCode == endOfBlockHashCode)
             {

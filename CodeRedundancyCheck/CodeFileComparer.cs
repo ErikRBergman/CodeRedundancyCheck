@@ -103,14 +103,14 @@
                     {
                         var sourceLine = allSourceLines[sourceFileLineIndex];
 
-                        ThinList<CodeLine> lineMatches;
-
-                        if (compareFileCodeLinesDictionary.TryGetValue(sourceLine.WashedLineHashCode, out lineMatches) == false)
+                        if (sourceLine.MayStartBlock == false)
                         {
                             continue;
                         }
 
-                        if (filter.MayStartBlock(sourceLine, sourceFile) == false)
+                        ThinList<CodeLine> lineMatches;
+
+                        if (compareFileCodeLinesDictionary.TryGetValue(sourceLine.WashedLineHashCode, out lineMatches) == false)
                         {
                             continue;
                         }
