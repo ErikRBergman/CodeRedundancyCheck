@@ -6,6 +6,6 @@ namespace CodeRedundancyCheck.Interface
 {
     public interface ICodeFileLoader
     {
-        Task<CodeFile> LoadCodeFile(Stream codeFileStream, Encoding encoding, bool leaveStreamOpen = false);
+        Task<CodeFile> LoadCodeFileAsync(Stream codeFileStream, Encoding encoding, bool leaveStreamOpen = false);
     }
 }

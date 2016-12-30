@@ -6,6 +6,7 @@ using System.Windows.Forms;
 
 namespace CodeRedundancyCheck.WinForms.UI
 {
+    using System.Collections.Concurrent;
     using System.Diagnostics;
     using System.IO;
     using System.Text;
@@ -53,25 +54,32 @@ namespace CodeRedundancyCheck.WinForms.UI
                 f => !f.EndsWith(".generated.cs", StringComparison.OrdinalIgnoreCase)
                 && !f.EndsWith(".designer.cs", StringComparison.OrdinalIgnoreCase)
                 && !f.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
-                && !f.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase)
-                ).ToArray();
+                && !f.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
 
-            var codeFiles = new List<CodeFile>(files.Length);
+            Console.WriteLine("Loading files....");
 
-            foreach (var filename in files.OrderBy(f => f))
-            {
-                var file = await loader.LoadCodeFile(File.OpenRead(filename), Encoding.Default);
-                file.Filename = filename;
-                codeFiles.Add(file);
-            }
+            var loadFileStopwatch = Stopwatch.StartNew();
 
-//            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.Lines * c.CodeFileMatches.Count).ToList();
+            var codeFiles = await loader.LoadCodeFiles(files, Encoding.Default, 1);
+
+            loadFileStopwatch.Stop();
+
+            Console.WriteLine("Load files took " + loadFileStopwatch.ElapsedMilliseconds + "ms");
+
+            var blockStopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine("Finding duplicate blocks..");
             var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
+
+            Console.WriteLine("Finding duplicate blocks took " + blockStopwatch.ElapsedMilliseconds + "ms");
 
             stopwatch.Stop();
             
             Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
+
+            Console.ReadKey(false);
 
             var commentedMatches = new HashSet<CodeFile>();
 

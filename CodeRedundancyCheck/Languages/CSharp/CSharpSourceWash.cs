@@ -12,8 +12,6 @@
 
         public IEnumerable<CodeLine> Wash(IEnumerable<CodeLine> lines)
         {
-            int lineNumber = 0;
-
             foreach (var line in lines)
             {
                 line.WashedLineText = this.WashLine(line.OriginalLineText);
@@ -31,9 +29,9 @@
         public string WashLine(string sourceCode)
         {
             var isInText = false;
-            var builder = new StringBuilder();
 
             var codeLength = sourceCode.Length;
+            var builder = new StringBuilder(codeLength);
             char? lastChar = null;
             bool lastCharIsWhiteSpace = false;
 

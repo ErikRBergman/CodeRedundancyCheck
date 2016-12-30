@@ -37,7 +37,7 @@ namespace CodeRedundancyCheck.Test
 
             foreach (var filename in files)
             {
-                var file = await loader.LoadCodeFile(File.OpenRead(filename), Encoding.Default);
+                var file = await loader.LoadCodeFileAsync(File.OpenRead(filename), Encoding.Default);
                 file.Filename = filename;
                 codeFiles.Add(file);
             }
@@ -112,7 +112,7 @@ namespace CodeRedundancyCheck.Test
 
             foreach (var filename in files)
             {
-                var file = await loader.LoadCodeFile(File.OpenRead(filename), Encoding.Default);
+                var file = await loader.LoadCodeFileAsync(File.OpenRead(filename), Encoding.Default);
                 file.Filename = filename;
                 codeFiles.Add(file);
             }
