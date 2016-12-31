@@ -8,6 +8,8 @@ namespace CodeRedundancyCheck
 
     public class CodeFile
     {
+        public volatile bool IsDone;
+
         public string Filename;
 
         public int UniqueId;

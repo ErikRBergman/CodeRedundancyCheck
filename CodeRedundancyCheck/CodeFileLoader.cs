@@ -63,6 +63,7 @@
                     lines.Add(codeLine);
 
                     lineBuilder.Clear();
+                    continue;
                 }
 
                 lineBuilder.Append(ch);
@@ -134,7 +135,9 @@
                 buffer.Position = 0;
             }
 
-            return await this.LoadCodeFileAsync(buffer, encoding);
+            var codeFile = await this.LoadCodeFileAsync(buffer, encoding);
+            codeFile.Filename = filename;
+            return codeFile;
         }
 
         private async Task LoadCodeFileItemFromQueueAsync(ConcurrentQueue<CodeFileItem> items)

@@ -95,6 +95,12 @@
 
                 foreach (var compareFile in codeFileArray)
                 {
+                    // avoid duplicate work as much as possible
+                    if (compareFile.IsDone)
+                    {
+                        continue;
+                    }
+
                     var allCompareFileLines = compareFile.CodeLines;
                     var allCompareFileLinesCount = allCompareFileLines.Length;
                     var compareFileCodeLinesDictionary = compareFile.CodeLinesDictionary;
@@ -261,6 +267,8 @@
                         }
                     }
                 }
+
+                sourceFile.IsDone = true;
             }
         }
 
