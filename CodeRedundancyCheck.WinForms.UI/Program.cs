@@ -37,7 +37,7 @@ namespace CodeRedundancyCheck.WinForms.UI
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(0xFFFFFFFF), new CodeFileLineIndexer(), CSharpCodeLineFilter.Singleton);
 
             // C:\Projects\celsa
-//            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
+            //            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -72,19 +72,22 @@ namespace CodeRedundancyCheck.WinForms.UI
             Console.WriteLine(codeMatches.Count + " blocks found");
 
 
-            Console.WriteLine();
-            Console.WriteLine("Top 10 blocks: ");
-
-            foreach (var block in codeMatches.Take(10))
+            if (false)
             {
-                Console.WriteLine("Block: " + block.UniqueId + ", Number of lines: " + block.LineCount + ", matches: " + block.CodeFileMatches.Count + ", first 5 lines:");
-
-                foreach (var line in block.MatchingCodeLines.Take(5))
-                {
-                    Console.WriteLine(">> " + line.OriginalLineText);
-                }
-
                 Console.WriteLine();
+                Console.WriteLine("Top 10 blocks: ");
+
+                foreach (var block in codeMatches.Take(10))
+                {
+                    Console.WriteLine("Block: " + block.UniqueId + ", Number of lines: " + block.LineCount + ", matches: " + block.CodeFileMatches.Count + ", first 5 lines:");
+
+                    foreach (var line in block.MatchingCodeLines.Take(5))
+                    {
+                        Console.WriteLine(">> " + line.OriginalLineText);
+                    }
+
+                    Console.WriteLine();
+                }
             }
 
             // Console.ReadKey(false);

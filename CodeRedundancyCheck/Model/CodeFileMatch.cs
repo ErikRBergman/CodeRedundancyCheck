@@ -7,9 +7,10 @@
 
     public class CodeFileMatch
     {
-        public CodeFileMatch(CodeFile codeFile, int firstCodeFileLineNumber, List<CodeLine> matchingLines)
+        public CodeFileMatch(CodeFile codeFile, int firstCodeFileLineNumber, List<CodeLine> matchingLines, long lineKey)
         {
             this.MatchingLines = matchingLines;
+            this.LineKey = lineKey;
             this.CodeFile = codeFile;
             this.FirstCodeFileLineNumber = firstCodeFileLineNumber;
         }
@@ -18,6 +19,8 @@
 
         public CodeFile CodeFile { get; set; }
         public List<CodeLine> MatchingLines { get; set; }
+
+        public long LineKey { get; set; }
 
         public override string ToString()
         {
