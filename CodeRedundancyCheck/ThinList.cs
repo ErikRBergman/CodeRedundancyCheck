@@ -33,7 +33,7 @@
             this.length++;
         }
 
-        public ICollection<T> AsCollection() => new ThinListCollection<T>(this);
+        public ThinListCollection<T> AsCollection() => new ThinListCollection<T>(this);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
@@ -70,7 +70,7 @@
         }
     }
 
-    internal struct ThinListCollection<T> : ICollection<T>, IReadOnlyCollection<T>
+    public struct ThinListCollection<T> : ICollection<T>, IReadOnlyCollection<T>
     {
         private readonly ThinList<T> thinList;
 

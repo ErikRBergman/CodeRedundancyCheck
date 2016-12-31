@@ -3,20 +3,16 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
 
     using CodeRedundancyCheck.Common;
     using CodeRedundancyCheck.Extensions;
-    using CodeRedundancyCheck.Interface;
     using CodeRedundancyCheck.Model;
 
     public class CodeFileComparer
     {
-        const int MaxNumberOfLinesInBlock = 100000;
-
-        public ICodeLineFilter CodeLineFilter { get; set; }
+        public const int MaxNumberOfLinesInBlock = 100000;
 
         public Task<IReadOnlyCollection<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, CodeFile firstCodeFile, params CodeFile[] codeFiles)
         {
@@ -38,12 +34,12 @@
             }
 
             var codeFileQueue = new ConcurrentQueue<CodeFile>(codeFileArray);
-            var result = new ConcurrentDictionary<long, CodeMatch>(Environment.ProcessorCount * 4, 50000);
-
             if (concurrencyLevel < 1)
             {
                 concurrencyLevel = Environment.ProcessorCount * 4;
             }
+
+            var result = new ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer>(concurrencyLevel, 50000);
 
             var tasks = new Task[concurrencyLevel];
 
@@ -54,7 +50,7 @@
 
             await Task.WhenAll(tasks);
 
-            return result.Values.ToArray();
+            return result.Values.SelectMany(v => v.CodeMatches).ToArray();
         }
 
         private static long GetBlockKey(int uniqueId, CodeLine[] codeLines, int matchingLineCount)
@@ -72,14 +68,12 @@
             return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
         }
 
-        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<long, CodeMatch> result)
+        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result)
         {
             var sourceLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
             var compareLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
 
             var addedBlocks = new HashSet<long>();
-
-            var filter = this.CodeLineFilter;
 
             while (codeFileQueue.Count > 0)
             {
@@ -188,6 +182,7 @@
                                     continue;
                                 }
                             }
+
                             {
                                 var sourceFileLineIndexTemp = sourceFileLineIndex;
 
@@ -244,23 +239,24 @@
                                             addedBlocks.AddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp);
                                         }
 
-                                        var match = result.GetOrAdd(
-                                            sourceLinesKey,
+                                        var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);
+
+                                        var codeMatchContainer = result.GetOrAdd(
+                                            matchKey,
                                             key =>
                                                 {
-                                                    var cmatch = new CodeMatch
-                                                    {
-                                                        CodeFileMatches = new ConcurrentBag<CodeFileMatch>(),
-                                                        Lines = matchingLineCount
-                                                    };
-
-                                                    cmatch.CodeFileMatches.Add(new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLines.AsCollection())));
-                                                    result.TryAdd(sourceLinesKey, cmatch);
-
-                                                    return cmatch;
+                                                    var newContainer = new CodeMatchContainer();
+                                                    return newContainer;
                                                 });
 
-                                        match.CodeFileMatches.Add(new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection())));
+                                        var sourceLinesCollection = sourceLines.AsCollection();
+                                        var codeMatch = codeMatchContainer.GetOrAddCodeMatch(sourceLinesCollection);
+
+                                        var sourceFileKey = new CodeFileMatchKey(sourceFile, sourceLines.Item(0).CodeFileLineIndex, matchingLineCount);
+                                        codeMatch.CodeFileMatches.GetOrAdd(sourceFileKey, key => new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLinesCollection)));
+
+                                        var compareFileKey = new CodeFileMatchKey(compareFile, compareLines.Item(0).CodeFileLineIndex, matchingLineCount);
+                                        codeMatch.CodeFileMatches.GetOrAdd(compareFileKey, key => new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection())));
                                     }
                                 }
                             }
@@ -270,26 +266,6 @@
 
                 sourceFile.IsDone = true;
             }
-        }
-
-        private static uint GetMinihashComparePattern(int minimumMatchingLines)
-        {
-            if (minimumMatchingLines >= 4)
-            {
-                return 0xFFFFFFFF;
-            }
-
-            if (minimumMatchingLines == 3)
-            {
-                return 0x0000FFFF;
-            }
-
-            if (minimumMatchingLines == 2)
-            {
-                return 0x000000FF;
-            }
-
-            return 0x0;
         }
     }
 }

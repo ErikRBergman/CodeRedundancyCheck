@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using CodeRedundancyCheck.Model;
-
-namespace CodeRedundancyCheck
+﻿namespace CodeRedundancyCheck
 {
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using CodeRedundancyCheck.Model;
+
     public class CodeFileMatch
     {
         public CodeFileMatch(CodeFile codeFile, int firstCodeFileLineNumber, List<CodeLine> matchingLines)

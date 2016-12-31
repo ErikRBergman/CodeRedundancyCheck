@@ -18,7 +18,7 @@ namespace CodeRedundancyCheck
 
         public void CommentMatches(CodeMatch match, CodeFileMatch codeFileMatch, string startComment, string endComment)
         {
-            var matchesInFileLookup = match.CodeFileMatches.ToLookup(m => m.CodeFile.Filename);
+            var matchesInFileLookup = match.CodeFileMatches.Values.ToLookup(m => m.CodeFile.Filename);
 
             var sourceComments = new Comments(startComment, endComment);
 
@@ -33,7 +33,7 @@ namespace CodeRedundancyCheck
 
             codeFileMatch.CodeFile.AllSourceLines = lines.ToArray();
 
-            foreach (var instance in match.CodeFileMatches.Select(m => m.CodeFile).Distinct())
+            foreach (var instance in match.CodeFileMatches.Values.Select(m => m.CodeFile).Distinct())
             {
                 this.codeFileLineIndexer.IndexCodeFile(instance);
             }

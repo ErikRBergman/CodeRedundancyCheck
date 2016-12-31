@@ -42,7 +42,6 @@ namespace CodeRedundancyCheck.WinForms.UI
             var codeFileComparer = new CodeFileComparer();
 
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(0xFFFFFFFF), new CodeFileLineIndexer(), CSharpCodeLineFilter.Singleton);
-            codeFileComparer.CodeLineFilter = CSharpCodeLineFilter.Singleton;
 
             // C:\Projects\celsa
 //            var files = Directory.GetFiles(@" D:\projects\dynamaster6\", "*.cs", SearchOption.AllDirectories)

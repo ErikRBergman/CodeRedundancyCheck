@@ -7,9 +7,16 @@ namespace CodeRedundancyCheck
 {
     using System.Collections.Concurrent;
 
+    using CodeRedundancyCheck.Model;
+
     public class CodeMatch
     {
         private string uniqueId;
+
+        public CodeMatch(IReadOnlyCollection<CodeLine> matchingCodeLines)
+        {
+            this.MatchingCodeLines = matchingCodeLines.ToArray();
+        }
 
         public string UniqueId
         {
@@ -22,12 +29,17 @@ namespace CodeRedundancyCheck
 
                 return this.uniqueId;
             }
-            set { this.uniqueId = value; }
+            set
+            {
+                this.uniqueId = value;
+            }
         }
 
-        public ConcurrentBag<CodeFileMatch> CodeFileMatches { get; set; }
+        public ConcurrentDictionary<CodeFileMatchKey, CodeFileMatch> CodeFileMatches { get; private set; } = new ConcurrentDictionary<CodeFileMatchKey, CodeFileMatch>();
 
-        public int Lines { get; set; }
+        public IReadOnlyCollection<CodeLine> MatchingCodeLines { get; set; }
+
+        public int LineCount { get; set; }
 
         public int ActualLines
         {
@@ -38,7 +50,7 @@ namespace CodeRedundancyCheck
 
                 int count = 0;
 
-                foreach (var match in this.CodeFileMatches)
+                foreach (var match in this.CodeFileMatches.Values)
                 {
                     if (match.MatchingLines != null && match.MatchingLines.Count > 0)
                     {
@@ -52,13 +64,13 @@ namespace CodeRedundancyCheck
 
         public override string ToString()
         {
-            string text = "Actual lines:" + this.ActualLines + ", Matched lines:" + this.Lines + ", Matches: " + this.CodeFileMatches.Count;
+            var text = "Actual lines:" + this.ActualLines + ", Matched lines:" + this.LineCount + ", Matches: " + this.CodeFileMatches.Count;
 
             if (this.CodeFileMatches != null && this.CodeFileMatches.Count > 0)
             {
-                CodeFileMatch match;
+                var match = this.CodeFileMatches.Values.FirstOrDefault();
 
-                if (this.CodeFileMatches.TryPeek(out match))
+                if (match != null)
                 {
                     text = text + ", First match: " + match;
                 }
