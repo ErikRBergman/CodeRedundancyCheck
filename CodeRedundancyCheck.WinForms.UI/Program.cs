@@ -24,16 +24,9 @@ namespace CodeRedundancyCheck.WinForms.UI
             //Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new ResultForm());
-
-            Stopwatch sw = Stopwatch.StartNew();
-
             // D:\projects\dynamaster6
 
             CheckQRAsync().Wait();
-
-            sw.Stop();
-
-            Console.WriteLine(sw.ElapsedMilliseconds + " ms");
         }
 
 
@@ -72,8 +65,27 @@ namespace CodeRedundancyCheck.WinForms.UI
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
             Console.WriteLine("Finding duplicate blocks took " + blockStopwatch.ElapsedMilliseconds + "ms");
             stopwatch.Stop();
-
             Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds);
+
+
+            Console.WriteLine();
+            Console.WriteLine(codeMatches.Count + " blocks found");
+
+
+            Console.WriteLine();
+            Console.WriteLine("Top 10 blocks: ");
+
+            foreach (var block in codeMatches.Take(10))
+            {
+                Console.WriteLine("Block: " + block.UniqueId + ", Number of lines: " + block.LineCount + ", matches: " + block.CodeFileMatches.Count + ", first 5 lines:");
+
+                foreach (var line in block.MatchingCodeLines.Take(5))
+                {
+                    Console.WriteLine(">> " + line.OriginalLineText);
+                }
+
+                Console.WriteLine();
+            }
 
             // Console.ReadKey(false);
 

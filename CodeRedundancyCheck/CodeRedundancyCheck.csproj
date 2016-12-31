@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="CodeFileLoader.cs" />
     <Compile Include="Common\DivideAndConquerDictionary.cs" />
+    <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Model\CodeFileMatchKey.cs" />
     <Compile Include="Model\CodeMatchContainer.cs" />

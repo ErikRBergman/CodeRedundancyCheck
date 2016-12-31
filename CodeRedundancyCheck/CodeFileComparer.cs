@@ -40,12 +40,14 @@
             }
 
             var result = new ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer>(concurrencyLevel, 50000);
+            var innerBlockFilter = new ConcurrentDictionary<long, bool>(concurrencyLevel, 50000);
+
 
             var tasks = new Task[concurrencyLevel];
 
             for (int i = 0; i < concurrencyLevel; i++)
             {
-                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result));
+                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result, innerBlockFilter));
             }
 
             await Task.WhenAll(tasks);
@@ -68,12 +70,10 @@
             return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
         }
 
-        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result)
+        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result, ConcurrentDictionary<long, bool> innerBlockFilter)
         {
             var sourceLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
             var compareLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
-
-            var addedBlocks = new HashSet<long>();
 
             while (codeFileQueue.Count > 0)
             {
@@ -227,16 +227,16 @@
                                     var compareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines, matchingLineCount);
                                     var sourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines, matchingLineCount);
 
-                                    if (addedBlocks.DoesNotContainAll(compareLinesKey, sourceLinesKey))
+                                    if (innerBlockFilter.DoesNotContainAll(compareLinesKey, sourceLinesKey))
                                     {
-                                        addedBlocks.AddMultiple(sourceLinesKey, compareLinesKey);
+                                        innerBlockFilter.AddMultiple(sourceLinesKey, compareLinesKey, true);
 
                                         //// Remove target blocks that are part of the added block
                                         for (var i = 1; i < matchingLineCount; i++)
                                         {
                                             var compareLinesKeyTemp = GetBlockKey(compareFile.UniqueId, compareLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
                                             var sourceLinesKeyTemp = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
-                                            addedBlocks.AddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp);
+                                            innerBlockFilter.AddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp, true);
                                         }
 
                                         var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);

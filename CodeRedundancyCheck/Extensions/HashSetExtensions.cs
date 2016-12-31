@@ -66,7 +66,6 @@ namespace CodeRedundancyCheck.Extensions
             hashSet.Add(item2);
         }
 
-
         public static void AddMultiple<T>(this HashSet<T> hashSet, params T[] items)
         {
             foreach (var item in items)
