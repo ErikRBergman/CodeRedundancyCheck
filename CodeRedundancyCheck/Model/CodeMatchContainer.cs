@@ -10,6 +10,13 @@
 
         private readonly object lockObject = new object();
 
+        private readonly CodeMatchContainerKey key;
+
+        public CodeMatchContainer(CodeMatchContainerKey key)
+        {
+            this.key = key;
+        }
+
         // not thread safe, no need while noone is reading while we're adding
         public IReadOnlyCollection<CodeMatch> CodeMatches => this.codeMatches;
 
@@ -96,6 +103,11 @@
         {
             var other = (CodeMatchContainerKey)obj;
             return other.firstLineHash == this.firstLineHash && other.next4Hash == this.next4Hash && other.linesOfCode == this.linesOfCode;
+        }
+
+        public override string ToString()
+        {
+            return "Hash: " + this.hashCode + ", FirstlineHash: " + this.firstLineHash + ", next4hash: " + this.next4Hash + ", linesOfCode: " + this.linesOfCode + ", line text:" + this.firstLineText;
         }
     }
 

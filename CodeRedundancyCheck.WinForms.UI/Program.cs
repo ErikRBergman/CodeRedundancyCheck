@@ -13,6 +13,8 @@ namespace CodeRedundancyCheck.WinForms.UI
 
     using CodeRedundancyCheck.Languages.CSharp;
 
+    using Newtonsoft.Json;
+
     static class Program
     {
         /// <summary>
@@ -55,13 +57,22 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var codeFiles = await loader.LoadCodeFiles(files, Encoding.Default);
 
+            Console.WriteLine("Loaded " + codeFiles.Count + " files, with a total of " + codeFiles.Sum(cf => cf.CodeLines.Length) + " lines...");
+
             loadFileStopwatch.Stop();
 
             Console.WriteLine("Load files took " + loadFileStopwatch.ElapsedMilliseconds + "ms");
 
             var blockStopwatch = Stopwatch.StartNew();
             Console.WriteLine("Finding duplicate blocks..");
-            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
+            //            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles, 1)).OrderByDescending(c => c.CodeFileMatches.Count).ToList();
+
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderBy(c => c.LineSummary).ToList();
+
+            var json = JsonConvert.SerializeObject(codeMatches, Formatting.Indented);
+
+            System.IO.File.WriteAllText(@"D:\Temp\CodeRedundancyDebugHelp\" + DateTime.Now.ToString("yyMMdd HHmmss") + ".json", json);
+
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
             Console.WriteLine("Finding duplicate blocks took " + blockStopwatch.ElapsedMilliseconds + "ms");
             stopwatch.Stop();

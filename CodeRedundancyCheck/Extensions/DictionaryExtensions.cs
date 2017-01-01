@@ -16,13 +16,12 @@ namespace CodeRedundancyCheck.Extensions
         }
 
 
-        public static void TryAddMultiple<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey item1, TKey item2, TValue value)
+        public static bool TryAddMultiple<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TValue value, TKey item1, TKey item2)
         {
-            dictionary.TryAdd(item1, value);
-            dictionary.TryAdd(item2, value);
+            return dictionary.TryAdd(item1, value) || dictionary.TryAdd(item2, value);
         }
 
-        public static void AddOrUpdateMultiple<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey item1, TKey item2, TValue value)
+        public static void AddOrUpdateMultiple<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TValue value, TKey item1, TKey item2)
         {
             dictionary.AddOrUpdate(item1, value, (key, value1) => value);
             dictionary.AddOrUpdate(item2, value, (key, value1) => value);

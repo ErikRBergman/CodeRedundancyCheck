@@ -24,7 +24,35 @@
             return this.GetMatchesAsync(minimumMatchingLines, files);
         }
 
-        public async Task<IReadOnlyCollection<CodeMatch>> GetMatchesAsync(int minimumMatchingLines, IEnumerable<CodeFile> codeFiles, int concurrencyLevel = -1)
+        private struct InnerBlockKey
+        {
+            public readonly long Key1;
+            public readonly long Key2;
+
+            private readonly int hashCode;
+
+            public InnerBlockKey(long key1, long key2)
+            {
+                this.Key1 = key1;
+                this.Key2 = key2;
+
+                this.hashCode = (int)(key1 + key2);
+            }
+
+            public override int GetHashCode() => this.hashCode;
+
+            public override bool Equals(object obj)
+            {
+                var other = (InnerBlockKey)obj;
+                return (other.Key1 == this.Key1 && other.Key2 == this.Key2) ||
+                    (other.Key1 == this.Key2 && other.Key2 == this.Key1);
+            }
+        }
+
+        public async Task<IReadOnlyCollection<CodeMatch>> GetMatchesAsync(
+            int minimumMatchingLines,
+            IEnumerable<CodeFile> codeFiles,
+            int concurrencyLevel = -1)
         {
             var codeFileArray = codeFiles as CodeFile[] ?? codeFiles.ToArray();
 
@@ -40,52 +68,23 @@
             }
 
             var result = new ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer>(concurrencyLevel, 50000);
-            var innerBlockFilter = new ConcurrentDictionary<long, bool>(concurrencyLevel, 50000);
-
+            var innerBlockFilter = new ConcurrentDictionary<InnerBlockKey, bool>(concurrencyLevel, 50000);
+            var blockFilter = new ConcurrentDictionary<long, bool>(concurrencyLevel, 50000);
 
             var tasks = new Task[concurrencyLevel];
 
             for (int i = 0; i < concurrencyLevel; i++)
             {
-                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result, innerBlockFilter));
+                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result, innerBlockFilter, blockFilter));
             }
 
             await Task.WhenAll(tasks);
 
             return result.Values.SelectMany(v => v.CodeMatches).ToArray();
 
-            //var resultItems = new List<CodeMatch>(50000);
-            //var keysToRemove = new List<CodeFileMatchKey>(500);
+            return result.Values.SelectMany(v => v.CodeMatches).ToArray();
 
-            //foreach (var match in result.Values.SelectMany(v => v.CodeMatches))
-            //{
-            //    keysToRemove.Clear();
-            //    foreach (var fileMatch in match.CodeFileMatches)
-            //    {
-            //        bool isOuterBlock;
-
-            //        if (innerBlockFilter.TryGetValue(fileMatch.Value.LineKey, out isOuterBlock))
-            //        {
-            //            if (!isOuterBlock)
-            //            {
-            //                keysToRemove.Add(fileMatch.Key);
-            //            }
-            //        }
-            //    }
-
-            //    if (keysToRemove.Count < match.CodeFileMatches.Count)
-            //    {
-            //        foreach (var key in keysToRemove)
-            //        {
-            //            CodeFileMatch codeFileMatchToRemove;
-            //            match.CodeFileMatches.TryRemove(key, out codeFileMatchToRemove);
-            //        }
-
-            //        resultItems.Add(match);
-            //    }
-            //}
-
-            //return resultItems;
+            ///return result.Values.SelectMany(v => v.CodeMatches).ToArray();
         }
 
         private static long GetBlockKey(int uniqueId, CodeLine[] codeLines, int matchingLineCount)
@@ -103,7 +102,14 @@
             return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
         }
 
-        private void GetMatchesAsync(int minimumMatchingLines, ConcurrentQueue<CodeFile> codeFileQueue, CodeFile[] codeFileArray, ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result, ConcurrentDictionary<long, bool> innerBlockFilter)
+        private void GetMatchesAsync(
+            int minimumMatchingLines,
+            ConcurrentQueue<CodeFile> codeFileQueue,
+            CodeFile[] codeFileArray,
+            ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result,
+            ConcurrentDictionary<InnerBlockKey, bool> innerBlockFilter,
+            ConcurrentDictionary<long, bool> blockFilter
+            )
         {
             var sourceLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
             var compareLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
@@ -123,10 +129,10 @@
                 foreach (var compareFile in codeFileArray)
                 {
                     // avoid duplicate work as much as possible
-                    if (compareFile.IsDone)
-                    {
-                        continue;
-                    }
+                    //if (compareFile.IsDone)
+                    //{
+                    //    continue;
+                    //}
 
                     var allCompareFileLines = compareFile.CodeLines;
                     var allCompareFileLinesCount = allCompareFileLines.Length;
@@ -186,10 +192,10 @@
                                 var compareFileLineIndexTemp = compareFileLineIndex;
 
                                 var compareLine = allCompareFileLines[compareFileLineIndexTemp];
-                                sourceLine = allSourceLines[sourceFileLineIndex];
+                                var nextSourceLine = allSourceLines[sourceFileLineIndex];
 
                                 // Precheck to ensure enough matching lines to pass minimum
-                                while (sourceLine.WashedLineHashCode == compareLine.WashedLineHashCode)
+                                while (nextSourceLine.WashedLineHashCode == compareLine.WashedLineHashCode)
                                 {
                                     matchingLineCount++;
 
@@ -206,7 +212,7 @@
                                         break;
                                     }
 
-                                    sourceLine = allSourceLines[sourceFileLineIndexTemp];
+                                    nextSourceLine = allSourceLines[sourceFileLineIndexTemp];
                                     compareLine = allCompareFileLines[compareFileLineIndexTemp];
                                 }
 
@@ -231,14 +237,14 @@
 
                                 var compareLine = allCompareFileLines[compareFileLineIndexTemp];
 
-                                sourceLine = allSourceLines[sourceFileLineIndex];
+                                var nextSourceLine = allSourceLines[sourceFileLineIndex];
 
                                 sourceLines.Clear();
                                 compareLines.Clear();
 
-                                while (sourceLine.WashedLineHashCode == compareLine.WashedLineHashCode && string.Compare(sourceLine.WashedLineText, compareLine.WashedLineText, StringComparison.Ordinal) == 0)
+                                while (nextSourceLine.WashedLineHashCode == compareLine.WashedLineHashCode && string.Compare(nextSourceLine.WashedLineText, compareLine.WashedLineText, StringComparison.Ordinal) == 0)
                                 {
-                                    sourceLines.Add(sourceLine);
+                                    sourceLines.Add(nextSourceLine);
                                     compareLines.Add(compareLine);
 
                                     matchingLineCount++;
@@ -251,48 +257,61 @@
                                         break;
                                     }
 
-                                    sourceLine = allSourceLines[sourceFileLineIndexTemp];
+                                    nextSourceLine = allSourceLines[sourceFileLineIndexTemp];
                                     compareLine = allCompareFileLines[compareFileLineIndexTemp];
                                 }
 
                                 if (matchingLineCount >= minimumMatchingLines)
                                 {
-                                    var compareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines, matchingLineCount);
                                     var sourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines, matchingLineCount);
+                                    var compareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines, matchingLineCount);
 
-                                    if (innerBlockFilter.DoesNotContainAll(compareLinesKey, sourceLinesKey))
+                                    var blockKey = new InnerBlockKey(sourceLinesKey, compareLinesKey);
+
+                                    if (innerBlockFilter.TryAdd(blockKey, true))
                                     {
-                                        // True for actual duplicate blocks, false for inner blocks
-                                        innerBlockFilter.AddOrUpdateMultiple(sourceLinesKey, compareLinesKey, true);
 
-                                        // Remove  blocks that are part of the added block, "inner blocks"
-                                        for (var i = 1; i < matchingLineCount; i++)
+
+                                        //                                    if (innerBlockFilter.TryAdd(blockKey, true) && blockFilter.DoesNotContainAll())
+
+                                        var addedSource = blockFilter.TryAdd(sourceLinesKey, true);
+                                        var addedCompare = blockFilter.TryAdd(sourceLinesKey, true);
+
+                                        if (addedSource || addedCompare)
                                         {
-                                            var compareLinesKeyTemp = GetBlockKey(compareFile.UniqueId, compareLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
-                                            var sourceLinesKeyTemp = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
+                                            // Remove  blocks that are part of the added block, "inner blocks"
+                                            for (var i = 1; i < matchingLineCount; i++)
+                                            {
+                                                var innerSourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
+                                                var innerCompareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
 
-                                            // True for actual duplicate blocks, false for inner blocks
-                                            innerBlockFilter.TryAddMultiple(compareLinesKeyTemp, sourceLinesKeyTemp, false);
+                                                blockFilter.TryAddMultiple(false, innerSourceLinesKey, innerCompareLinesKey);
+
+                                                //var innerBlockKey = new InnerBlockKey(innerSourceLinesKey, innerCompareLinesKey);
+                                                //innerBlockFilter.TryAdd(innerBlockKey, false);
+
+
+                                            }
+
+                                            var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);
+
+                                            var codeMatchContainer = result.GetOrAdd(
+                                                matchKey,
+                                                key =>
+                                                    {
+                                                        var newContainer = new CodeMatchContainer(key);
+                                                        return newContainer;
+                                                    });
+
+                                            var sourceLinesCollection = sourceLines.AsCollection();
+                                            var codeMatch = codeMatchContainer.GetOrAddCodeMatch(sourceLinesCollection);
+
+                                            var sourceFileKey = new CodeFileMatchKey(sourceFile, sourceLines.Item(0).CodeFileLineIndex, matchingLineCount);
+                                            codeMatch.CodeFileMatches.GetOrAdd(sourceFileKey, key => new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLinesCollection), sourceLinesKey));
+
+                                            var compareFileKey = new CodeFileMatchKey(compareFile, compareLines.Item(0).CodeFileLineIndex, matchingLineCount);
+                                            codeMatch.CodeFileMatches.GetOrAdd(compareFileKey, key => new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection()), compareLinesKey));
                                         }
-
-                                        var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);
-
-                                        var codeMatchContainer = result.GetOrAdd(
-                                            matchKey,
-                                            key =>
-                                                {
-                                                    var newContainer = new CodeMatchContainer();
-                                                    return newContainer;
-                                                });
-
-                                        var sourceLinesCollection = sourceLines.AsCollection();
-                                        var codeMatch = codeMatchContainer.GetOrAddCodeMatch(sourceLinesCollection);
-
-                                        var sourceFileKey = new CodeFileMatchKey(sourceFile, sourceLines.Item(0).CodeFileLineIndex, matchingLineCount);
-                                        codeMatch.CodeFileMatches.GetOrAdd(sourceFileKey, key => new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLinesCollection), sourceLinesKey));
-
-                                        var compareFileKey = new CodeFileMatchKey(compareFile, compareLines.Item(0).CodeFileLineIndex, matchingLineCount);
-                                        codeMatch.CodeFileMatches.GetOrAdd(compareFileKey, key => new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection()), compareLinesKey));
                                     }
                                 }
                             }

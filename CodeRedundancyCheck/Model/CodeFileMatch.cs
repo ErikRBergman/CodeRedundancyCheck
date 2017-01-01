@@ -2,9 +2,11 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.Serialization;
 
     using CodeRedundancyCheck.Model;
 
+    [DataContract]
     public class CodeFileMatch
     {
         public CodeFileMatch(CodeFile codeFile, int firstCodeFileLineNumber, List<CodeLine> matchingLines, long lineKey)
@@ -15,11 +17,15 @@
             this.FirstCodeFileLineNumber = firstCodeFileLineNumber;
         }
 
+        [DataMember]
         public int FirstCodeFileLineNumber { get; set; }
 
         public CodeFile CodeFile { get; set; }
+
+        [DataMember]
         public List<CodeLine> MatchingLines { get; set; }
 
+        [DataMember]
         public long LineKey { get; set; }
 
         public override string ToString()

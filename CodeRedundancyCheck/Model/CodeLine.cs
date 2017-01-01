@@ -54,13 +54,13 @@
             }
         }
 
-        public CodeLine ParentCodeLine { get; set; }
+        //public CodeLine ParentCodeLine { get; set; }
 
-        public bool IsFullLine { get; set; } = true;
+        //public bool IsFullLine { get; set; } = true;
 
         public bool IsCodeLine { get; set; } = true;
 
-        public CodeLineMeaning CodeLineMeaning { get; set; }
+        // public CodeLineMeaning CodeLineMeaning { get; set; }
 
         public override string ToString()
         {
