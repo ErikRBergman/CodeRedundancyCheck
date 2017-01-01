@@ -151,10 +151,11 @@
                                 var compareFileLineIndexTemp = compareFileLineIndex;
 
                                 var compareLine = allCompareFileLines[compareFileLineIndexTemp];
+                                var nextCompareLine = compareLine;
                                 var nextSourceLine = allSourceLines[sourceFileLineIndex];
 
                                 // Precheck to ensure enough matching lines to pass minimum
-                                while (nextSourceLine.WashedLineHashCode == compareLine.WashedLineHashCode)
+                                while (nextSourceLine.WashedLineHashCode == nextCompareLine.WashedLineHashCode)
                                 {
                                     matchingLineCount++;
 
@@ -172,7 +173,7 @@
                                     }
 
                                     nextSourceLine = allSourceLines[sourceFileLineIndexTemp];
-                                    compareLine = allCompareFileLines[compareFileLineIndexTemp];
+                                    nextCompareLine = allCompareFileLines[compareFileLineIndexTemp];
                                 }
 
                                 if (matchingLineCount < minimumMatchingLines)
@@ -197,14 +198,15 @@
                                 var compareLine = allCompareFileLines[compareFileLineIndexTemp];
 
                                 var nextSourceLine = allSourceLines[sourceFileLineIndex];
+                                var nextCompareLine = compareLine;
 
                                 sourceLines.Clear();
                                 compareLines.Clear();
 
-                                while (nextSourceLine.WashedLineHashCode == compareLine.WashedLineHashCode && string.Compare(nextSourceLine.WashedLineText, compareLine.WashedLineText, StringComparison.Ordinal) == 0)
+                                while (nextSourceLine.WashedLineHashCode == nextCompareLine.WashedLineHashCode && string.Compare(nextSourceLine.WashedLineText, nextCompareLine.WashedLineText, StringComparison.Ordinal) == 0)
                                 {
                                     sourceLines.Add(nextSourceLine);
-                                    compareLines.Add(compareLine);
+                                    compareLines.Add(nextCompareLine);
 
                                     matchingLineCount++;
 
@@ -217,34 +219,43 @@
                                     }
 
                                     nextSourceLine = allSourceLines[sourceFileLineIndexTemp];
-                                    compareLine = allCompareFileLines[compareFileLineIndexTemp];
+                                    nextCompareLine = allCompareFileLines[compareFileLineIndexTemp];
                                 }
 
                                 if (matchingLineCount >= minimumMatchingLines)
                                 {
-                                    var lineSummary = string.Join(",", sourceLines.AsCollection().Select(sl => sl.WashedLineText));
+                                    //var lineSummary = string.Join(",", sourceLines.AsCollection().Select(sl => sl.WashedLineText));
 
-                                    var lineSummaryResult = 0;
+                                    //var lineSummaryResult = 0;
 
-                                    if (lineSummary
-                                        == "using system;,using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
-                                    {
-                                        var xx = 1;
-                                        lineSummaryResult = 1;
-                                    }
+                                    //if (lineSummary
+                                    //    == "using system;,using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
+                                    //{
+                                    //    var xx = 1;
+                                    //    lineSummaryResult = 1;
+                                    //}
 
-                                    if (lineSummary
-                                        == "using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
-                                    {
-                                        var xx = 1;
-                                        lineSummaryResult = 2;
-                                    }
+                                    //if (lineSummary
+                                    //    == "using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
+                                    //{
+                                    //    var xx = 1;
+                                    //    lineSummaryResult = 2;
+                                    //}
+
+                                    //// 
+
+                                    //if (lineSummary  == "using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
+                                    //{
+                                    //    var xx = 1;
+                                    //    lineSummaryResult = 2;
+                                    //}
+
 
                                     // Link to compare line block
                                     var addedSource = sourceLine.AddBlockWithResult(compareFile, compareLines, 0);
 
                                     // Link to source line block
-                                    var addedCompare = sourceLine.AddBlockWithResult(sourceFile, sourceLines, 0);
+                                    var addedCompare = compareLine.AddBlockWithResult(sourceFile, sourceLines, 0);
 
                                     if (addedSource.WasAdded || addedCompare.WasAdded)
                                     {
@@ -255,10 +266,10 @@
                                             var innerCompareLine = compareLines.Item(i);
 
                                             // Link to compare line block
-                                            innerSourceLine.AddBlock(compareFile, innerCompareLine, matchingLineCount - i);
+                                            var addedInnerSourceBlock = innerSourceLine.AddBlockWithResult(compareFile, innerCompareLine, matchingLineCount - i);
 
                                             // Link to source line block
-                                            innerCompareLine.AddBlock(sourceFile, innerSourceLine, matchingLineCount - i);
+                                            var addedInnerCompareBlock = innerCompareLine.AddBlockWithResult(sourceFile, innerSourceLine, matchingLineCount - i);
                                         }
 
                                         var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);
@@ -267,7 +278,7 @@
                                             matchKey,
                                             key =>
                                                 {
-                                                    var lfs = lineSummaryResult;
+                                                    // var lfs = lineSummaryResult;
 
                                                     var newContainer = new CodeMatchContainer(key);
                                                     return newContainer;
@@ -277,10 +288,10 @@
                                         var codeMatch = codeMatchContainer.GetOrAddCodeMatch(sourceLinesCollection);
 
                                         var sourceFileKey = new CodeFileMatchKey(sourceFile, sourceLines.Item(0).CodeFileLineIndex, matchingLineCount);
-                                        codeMatch.CodeFileMatches.GetOrAdd(sourceFileKey, key => new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLinesCollection), addedCompare.BlockKey));
+                                        codeMatch.CodeFileMatches.GetOrAdd(sourceFileKey, key => new CodeFileMatch(sourceFile, sourceLines.Item(0).CodeFileLineIndex, new List<CodeLine>(sourceLinesCollection), addedCompare.BlockKey.FullHash));
 
                                         var compareFileKey = new CodeFileMatchKey(compareFile, compareLines.Item(0).CodeFileLineIndex, matchingLineCount);
-                                        codeMatch.CodeFileMatches.GetOrAdd(compareFileKey, key => new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection()), addedSource.BlockKey));
+                                        codeMatch.CodeFileMatches.GetOrAdd(compareFileKey, key => new CodeFileMatch(compareFile, compareLines.Item(0).CodeFileLineIndex, new List<CodeLine>(compareLines.AsCollection()), addedSource.BlockKey.FullHash));
                                     }
                                     else
                                     {

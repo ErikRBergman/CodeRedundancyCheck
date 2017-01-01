@@ -85,6 +85,7 @@
     <Compile Include="Common\DivideAndConquerDictionary.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="Model\BlockKey.cs" />
     <Compile Include="Model\CodeFileMatchKey.cs" />
     <Compile Include="Model\CodeMatchContainer.cs" />
     <Compile Include="ThinList.cs" />
