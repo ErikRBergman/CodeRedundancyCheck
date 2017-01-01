@@ -113,7 +113,15 @@
                 lastCharIsWhiteSpace = false;
             }
 
-            return builder.ToString().TrimEnd();
+            var length = builder.Length;
+
+            // if last char was whitespace, ignore it
+            if (lastCharIsWhiteSpace)
+            {
+                length--;
+            }
+
+            return builder.ToString(0, length);
         }
 
         private static bool IsWhiteSpace(char ch)
