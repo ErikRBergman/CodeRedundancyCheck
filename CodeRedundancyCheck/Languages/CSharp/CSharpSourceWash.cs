@@ -1,8 +1,10 @@
 ﻿namespace CodeRedundancyCheck.Languages.CSharp
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
 
+    using CodeRedundancyCheck.Common;
     using CodeRedundancyCheck.Interface;
     using CodeRedundancyCheck.Model;
 
@@ -41,11 +43,11 @@
             var isInText = false;
 
             var codeLength = sourceCode.Length;
-            var builder = new StringBuilder(codeLength);
+            var builder = new ThinList<char>(codeLength);
             var lastChar = char.MinValue;
             var lastCharIsWhiteSpace = false;
 
-            var nullChar = char.MinValue;
+            const char NullChar = char.MinValue;
 
             for (var index = 0; index < codeLength; index++)
             {
@@ -55,7 +57,7 @@
                 var isWhitespace = ch == ' ' || ch == '\t';
 
                 // Remove leading and multiple white spaces
-                if (isWhitespace && (builder.Length == 0 || (isInText == false && (lastChar == nullChar || lastCharIsWhiteSpace))))
+                if (isWhitespace && (builder.Length == 0 || (isInText == false && (lastChar == NullChar || lastCharIsWhiteSpace))))
                 {
                     lastChar = ch;
                     lastCharIsWhiteSpace = true;
@@ -74,11 +76,11 @@
                     {
                         isInText = true;
 
-                        builder.Append(ch);
+                        builder.Add(ch);
                     }
                     else
                     {
-                        builder.Append(ch);
+                        builder.Add(ch);
 
                         var endText = true;
 
@@ -92,7 +94,7 @@
                                 index++;
 
                                 // builder.Append(char.ToLowerInvariant(sourceCode[index]));
-                                builder.Append(this.lowerLookup[sourceCode[index]]);
+                                builder.Add(this.lowerLookup[sourceCode[index]]);
 
                                 endText = false;
                             }
@@ -106,22 +108,27 @@
                 }
                 else
                 {
-                    builder.Append(ch);
+                    builder.Add(ch);
                 }
 
                 lastChar = ch;
                 lastCharIsWhiteSpace = false;
             }
 
-            var length = builder.Length;
+            var length = builder.length;
 
             // if last char was whitespace, ignore it
             if (lastCharIsWhiteSpace)
             {
                 length--;
+
+                if (length <= 0)
+                {
+                    return string.Empty;
+                }
             }
 
-            return builder.ToString(0, length);
+            return new string(builder.array, 0, length);
         }
 
         private static bool IsWhiteSpace(char ch)
