@@ -6,8 +6,8 @@
 
     public class CodeLine
     {
-        public readonly ConcurrentDictionary<BlockKey, bool> Blocks = new ConcurrentDictionary<BlockKey, bool>();
-        //public readonly ConcurrentDictionary<long, bool> Blocks = new ConcurrentDictionary<long, bool>();
+        //public readonly ConcurrentDictionary<BlockKey, bool> Blocks = new ConcurrentDictionary<BlockKey, bool>();
+        public readonly ConcurrentDictionary<long, bool> Blocks = new ConcurrentDictionary<long, bool>();
 
         public int CodeFileLineIndex;
 
@@ -32,8 +32,8 @@
 
         public bool AddBlock(CodeFile codeFile, CodeLine codeLine, int numberOfLines)
         {
-            //return this.Blocks.TryAdd(GetBlockKey(codeFile.UniqueId, codeLine, numberOfLines), true);
-            return this.Blocks.TryAdd(CreateBlockKey(codeFile, codeLine, numberOfLines), true);
+            return this.Blocks.TryAdd(GetBlockKey(codeFile.UniqueId, codeLine, numberOfLines), true);
+            //return this.Blocks.TryAdd(CreateBlockKey(codeFile, codeLine, numberOfLines), true);
         }
 
         private static BlockKey CreateBlockKey(CodeFile codeFile, CodeLine codeLine, int numberOfLines)
@@ -43,17 +43,19 @@
 
         public bool AddBlock(CodeFile codeFile, ThinList<CodeLine> codeLines, int index)
         {
-            //return this.Blocks.TryAdd(GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index), true);
-            return this.Blocks.TryAdd(CreateBlockKey(codeFile, codeLines, index), true);
+            return this.Blocks.TryAdd(GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index), true);
+            //return this.Blocks.TryAdd(CreateBlockKey(codeFile, codeLines, index), true);
         }
 
         public struct AddBlockResult
         {
             public readonly bool WasAdded;
 
-            public readonly BlockKey BlockKey;
+//            public readonly BlockKey BlockKey;
+            public readonly long BlockKey;
 
-            public AddBlockResult(bool wasAdded, BlockKey blockKey)
+//            public AddBlockResult(bool wasAdded, BlockKey blockKey)
+            public AddBlockResult(bool wasAdded, long blockKey)
             {
                 this.WasAdded = wasAdded;
                 this.BlockKey = blockKey;
@@ -62,25 +64,19 @@
 
         public AddBlockResult AddBlockWithResult(CodeFile codeFile, ThinList<CodeLine> codeLines, int index)
         {
-            // var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index);
-            //return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
-
-            var blockKey = CreateBlockKey(codeFile, codeLines, index);
+            var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index);
             return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
 
-            //var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length-index);
+            //var blockKey = CreateBlockKey(codeFile, codeLines, index);
             //return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
         }
 
-        public AddBlockResult AddBlockWithResult(CodeFile codeFile, CodeLine codeLine, int index)
+        public AddBlockResult AddBlockWithResult(CodeFile codeFile, CodeLine codeLine, int numberOfLines)
         {
-            // var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index);
-            //return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
-
-            var blockKey = CreateBlockKey(codeFile, codeLine, index);
+            var blockKey = GetBlockKey(codeFile.UniqueId, codeLine, numberOfLines);
             return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
 
-            //var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length-index);
+            //var blockKey = CreateBlockKey(codeFile, codeLine, index);
             //return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
         }
 

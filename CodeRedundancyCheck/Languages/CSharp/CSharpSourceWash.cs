@@ -1,5 +1,6 @@
 ﻿namespace CodeRedundancyCheck.Languages.CSharp
 {
+    using System;
     using System.Collections.Generic;
     using System.Text;
 
@@ -8,7 +9,17 @@
 
     public class CSharpSourceWash : ISourceWash
     {
-        public static ISourceWash Singleton { get; } = new VisualBasicSourceWash();
+        private readonly char[] lowerLookup;
+
+        public CSharpSourceWash()
+        {
+            this.lowerLookup = new char[char.MaxValue];
+
+            for (var i = char.MinValue; i < char.MaxValue; i++)
+            {
+                this.lowerLookup[i] = char.ToLowerInvariant(i);
+            }
+        }
 
         public IEnumerable<CodeLine> Wash(IEnumerable<CodeLine> lines)
         {
@@ -37,7 +48,8 @@
 
             for (int index = 0; index < codeLength; index++)
             {
-                var ch = char.ToLowerInvariant(sourceCode[index]);
+                // var ch = char.ToLowerInvariant(sourceCode[index]);
+                var ch = this.lowerLookup[sourceCode[index]];
 
                 bool isWhitespace = char.IsWhiteSpace(ch);
 
@@ -77,7 +89,8 @@
                             {
                                 // Escaped double quotes
                                 index++;
-                                builder.Append(char.ToLowerInvariant(sourceCode[index]));
+                                //builder.Append(char.ToLowerInvariant(sourceCode[index]));
+                                builder.Append(this.lowerLookup[sourceCode[index]]);
 
                                 endText = false;
                             }
