@@ -1,11 +1,10 @@
 ﻿namespace CodeRedundancyCheck.Languages.CSharp
 {
-    using System;
     using System.Collections.Generic;
     using System.Text;
 
-    using Interface;
-    using Model;
+    using CodeRedundancyCheck.Interface;
+    using CodeRedundancyCheck.Model;
 
     public class CSharpSourceWash : ISourceWash
     {
@@ -43,25 +42,27 @@
 
             var codeLength = sourceCode.Length;
             var builder = new StringBuilder(codeLength);
-            char? lastChar = null;
-            bool lastCharIsWhiteSpace = false;
+            var lastChar = char.MinValue;
+            var lastCharIsWhiteSpace = false;
 
-            for (int index = 0; index < codeLength; index++)
+            var nullChar = char.MinValue;
+
+            for (var index = 0; index < codeLength; index++)
             {
                 // var ch = char.ToLowerInvariant(sourceCode[index]);
                 var ch = this.lowerLookup[sourceCode[index]];
 
-                bool isWhitespace = char.IsWhiteSpace(ch);
+                var isWhitespace = ch == ' ' || ch == '\t';
 
                 // Remove leading and multiple white spaces
-                if (isWhitespace && (builder.Length == 0 || isInText == false && (lastChar.HasValue == false || lastCharIsWhiteSpace)))
+                if (isWhitespace && (builder.Length == 0 || (isInText == false && (lastChar == nullChar || lastCharIsWhiteSpace))))
                 {
                     lastChar = ch;
                     lastCharIsWhiteSpace = true;
                     continue;
                 }
 
-                // allways use single space
+                // always use single space
                 if (isWhitespace && isInText == false)
                 {
                     ch = ' ';
@@ -89,7 +90,8 @@
                             {
                                 // Escaped double quotes
                                 index++;
-                                //builder.Append(char.ToLowerInvariant(sourceCode[index]));
+
+                                // builder.Append(char.ToLowerInvariant(sourceCode[index]));
                                 builder.Append(this.lowerLookup[sourceCode[index]]);
 
                                 endText = false;
@@ -114,5 +116,10 @@
             return builder.ToString().TrimEnd();
         }
 
+        private static bool IsWhiteSpace(char ch)
+        {
+            // return char.IsWhiteSpace(ch);
+            return ch == ' ' || ch == '\t';
+        }
     }
 }
