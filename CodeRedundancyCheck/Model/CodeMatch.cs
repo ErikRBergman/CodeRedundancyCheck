@@ -46,7 +46,7 @@
         public int CodeFileMatchCount => this.CodeFileMatches.Count;
 
         [DataMember]
-        public string CodeFileMatchSummary => string.Join(",", this.CodeFileMatches.Values.Select(v => v.CodeFile.Filename).OrderBy(v => v));
+        public string CodeFileMatchSummary => string.Join(",", this.CodeFileMatches.Values.Select(v => v.CodeFile.Filename + "-" + v.FirstCodeFileLineNumber).OrderBy(v => v));
 
         [DataMember]
         public int LineCount { get; set; }

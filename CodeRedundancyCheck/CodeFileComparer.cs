@@ -99,7 +99,7 @@
 
         private static long GetBlockKey(int uniqueId, int codeFileLineIndex, int matchingLineCount)
         {
-            return (uniqueId << 32) + (codeFileLineIndex << 16) + matchingLineCount;
+            return (((long)uniqueId) << 32) + (codeFileLineIndex << 16) + matchingLineCount;
         }
 
         private void GetMatchesAsync(
@@ -129,10 +129,10 @@
                 foreach (var compareFile in codeFileArray)
                 {
                     // avoid duplicate work as much as possible
-                    //if (compareFile.IsDone)
-                    //{
-                    //    continue;
-                    //}
+                    if (compareFile.IsDone)
+                    {
+                        // continue;
+                    }
 
                     var allCompareFileLines = compareFile.CodeLines;
                     var allCompareFileLinesCount = allCompareFileLines.Length;
@@ -263,35 +263,33 @@
 
                                 if (matchingLineCount >= minimumMatchingLines)
                                 {
-                                    var sourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines, matchingLineCount);
-                                    var compareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines, matchingLineCount);
+                                    var sourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLine.CodeFileLineIndex, matchingLineCount);
+                                    var compareLinesKey = GetBlockKey(compareFile.UniqueId, compareLine.CodeFileLineIndex, matchingLineCount);
 
                                     var blockKey = new InnerBlockKey(sourceLinesKey, compareLinesKey);
 
                                     if (innerBlockFilter.TryAdd(blockKey, true))
                                     {
-
-
                                         //                                    if (innerBlockFilter.TryAdd(blockKey, true) && blockFilter.DoesNotContainAll())
 
-                                        var addedSource = blockFilter.TryAdd(sourceLinesKey, true);
-                                        var addedCompare = blockFilter.TryAdd(sourceLinesKey, true);
+                                        //var addedSource = blockFilter.TryAdd(sourceLinesKey, true);
+                                        //var addedCompare = blockFilter.TryAdd(compareLinesKey, true);
 
-                                        if (addedSource || addedCompare)
+                                        //if (addedSource || addedCompare)
                                         {
                                             // Remove  blocks that are part of the added block, "inner blocks"
                                             for (var i = 1; i < matchingLineCount; i++)
                                             {
-                                                var innerSourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
-                                                var innerCompareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines.Item(0).CodeFileLineIndex + i, matchingLineCount - i);
+                                                var innerSourceLinesKey = GetBlockKey(sourceFile.UniqueId, sourceLines.Item(i).CodeFileLineIndex, matchingLineCount - i);
+                                                var innerCompareLinesKey = GetBlockKey(compareFile.UniqueId, compareLines.Item(i).CodeFileLineIndex, matchingLineCount - i);
 
-                                                blockFilter.TryAddMultiple(false, innerSourceLinesKey, innerCompareLinesKey);
+                                                var innerBlockKey = new InnerBlockKey(innerSourceLinesKey, innerCompareLinesKey);
 
-                                                //var innerBlockKey = new InnerBlockKey(innerSourceLinesKey, innerCompareLinesKey);
-                                                //innerBlockFilter.TryAdd(innerBlockKey, false);
-
-
+                                                // The Triad (tryadd pfff)
+                                                innerBlockFilter.TryAdd(innerBlockKey, false);
                                             }
+
+                                            // blockFilter.TryAddMultiple(false, innerSourceLinesKey, innerCompareLinesKey);
 
                                             var matchKey = new CodeMatchContainerKey(sourceLine.WashedLineHashCode, sourceLine.WashedLineText, sourceLine.Next4MiniHash, matchingLineCount);
 
