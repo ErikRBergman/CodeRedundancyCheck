@@ -65,8 +65,8 @@ namespace CodeRedundancyCheck.WinForms.UI
 
             var blockStopwatch = Stopwatch.StartNew();
             Console.WriteLine("Finding duplicate blocks..");
-                        var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.CodeFileMatches.Count * c.LineCount).ThenBy(c => c.LineSummary).ToList();
 
+            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles, 1)).OrderByDescending(c => c.CodeFileMatches.Count * c.LineCount).ThenBy(c => c.LineSummary).ToList();
             //var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderBy(c => c.LineSummary).ToList();
 
             var json = JsonConvert.SerializeObject(codeMatches, Formatting.Indented);

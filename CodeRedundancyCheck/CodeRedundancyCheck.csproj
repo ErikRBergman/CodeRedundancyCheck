@@ -79,6 +79,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeBlockLinkKey.cs" />
     <Compile Include="CodeFileLoader.cs" />
     <Compile Include="Common\BlockDictionary.cs" />
     <Compile Include="Common\DivideAndConquerDictionary.cs" />

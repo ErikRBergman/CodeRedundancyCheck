@@ -63,6 +63,7 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Item(int index) => this.array[index];
 
+
         public void Resize(int newCapacity)
         {
             var newArray = new T[newCapacity];
