@@ -1,13 +1,17 @@
 ﻿namespace CodeRedundancyCheck.Model
 {
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
 
     using CodeRedundancyCheck.Common;
 
     public class CodeLine
     {
         // public readonly ConcurrentDictionary<BlockKey, bool> Blocks = new ConcurrentDictionary<BlockKey, bool>();
-        public readonly ConcurrentDictionary<long, bool> Blocks = new ConcurrentDictionary<long, bool>();
+        // public readonly ConcurrentDictionary<long, bool> Blocks = new ConcurrentDictionary<long, bool>();
+        public readonly HashSet<long> Blocks = new HashSet<long>();
+
+        private readonly object blockLock = new object();
 
         public int CodeFileLineIndex;
 
@@ -58,9 +62,9 @@
         public static CodeLine CreateTargetLine(string targetLineText)
         {
             var line = new CodeLine
-                       {
-                           writableLine = targetLineText
-                       };
+            {
+                writableLine = targetLineText
+            };
 
             return line;
         }
@@ -68,8 +72,12 @@
         public AddBlockResult AddBlockWithResult(CodeFile codeFile, ThinList<CodeLine> codeLines, int index)
         {
             var blockKey = GetBlockKey(codeFile.UniqueId, codeLines.Item(index), codeLines.Length - index);
-            var tryAddResult = this.Blocks.TryAdd(blockKey, true);
-            return new AddBlockResult(tryAddResult, blockKey);
+
+            lock (this.blockLock)
+            {
+                var tryAddResult = this.Blocks.Add(blockKey);
+                return new AddBlockResult(tryAddResult, blockKey);
+            }
 
             // var blockKey = CreateBlockKey(codeFile, codeLines, index);
             // return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);
@@ -78,8 +86,11 @@
         public AddBlockResult AddBlockWithResult(CodeFile codeFile, CodeLine codeLine, int numberOfLines)
         {
             var blockKey = GetBlockKey(codeFile.UniqueId, codeLine, numberOfLines);
-            var tryAddResult = this.Blocks.TryAdd(blockKey, true);
-            return new AddBlockResult(tryAddResult, blockKey);
+            lock (this.blockLock)
+            {
+                var tryAddResult = this.Blocks.Add(blockKey);
+                return new AddBlockResult(tryAddResult, blockKey);
+            }
 
             // var blockKey = CreateBlockKey(codeFile, codeLine, index);
             // return new AddBlockResult(this.Blocks.TryAdd(blockKey, true), blockKey);

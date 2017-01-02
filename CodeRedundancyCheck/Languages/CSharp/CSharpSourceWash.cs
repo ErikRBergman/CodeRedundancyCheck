@@ -57,7 +57,7 @@
                 var isWhitespace = ch == ' ' || ch == '\t';
 
                 // Remove leading and multiple white spaces
-                if (isWhitespace && (builder.Length == 0 || (isInText == false && (lastChar == NullChar || lastCharIsWhiteSpace))))
+                if (isWhitespace && (builder.length == 0 || (isInText == false && (lastChar == NullChar || lastCharIsWhiteSpace))))
                 {
                     lastChar = ch;
                     lastCharIsWhiteSpace = true;
