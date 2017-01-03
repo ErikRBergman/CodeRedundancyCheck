@@ -109,17 +109,13 @@
                 var halfRangeLength = rangeLength >> 1;
                 var midpointIndex = rangeIndex + halfRangeLength;
                 var midPointKey = this.keys[midpointIndex];
-                var isRangeLengthEven = (rangeLength & 1) == 0;
+                var rangeLengthCarry = 1 - (rangeLength & 1);
                 rangeLength = halfRangeLength;
 
                 if (key > midPointKey)
                 {
                     rangeIndex = midpointIndex + 1;
-
-                    if (isRangeLengthEven)
-                    {
-                        rangeLength--;
-                    }
+                    rangeLength -= rangeLengthCarry;
 
                     continue;
                 }
