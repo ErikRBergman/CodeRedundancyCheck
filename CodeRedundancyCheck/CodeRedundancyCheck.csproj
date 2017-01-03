@@ -81,7 +81,6 @@
   <ItemGroup>
     <Compile Include="CodeBlockLinkKey.cs" />
     <Compile Include="CodeFileLoader.cs" />
-    <Compile Include="Common\BlockDictionary.cs" />
     <Compile Include="Common\DivideAndConquerDictionary.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />

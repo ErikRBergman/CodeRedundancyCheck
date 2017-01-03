@@ -86,15 +86,10 @@
             var rangeLength = this.Length;
             var rangeIndex = 0;
 
-            // int iterationCount = 0;
             do
             {
-                // iterationCount++;
-
-                // Debug.WriteLine("Iteration: " + iterationCount + ", rangeIndex: " + rangeIndex + ", rangeLength: " + rangeLength + ", last range index: " + (rangeIndex + rangeLength - 1) + ", length last bit: " + (rangeLength & 1));
-
                 // for puny ranges
-                if (rangeLength < 3)
+                if (rangeLength <= 3)
                 {
                     var maxValue = rangeIndex + rangeLength;
 
@@ -112,12 +107,8 @@
                 }
 
                 var halfRangeLength = rangeLength >> 1;
-
                 var midpointIndex = rangeIndex + halfRangeLength;
-
                 var midPointKey = this.keys[midpointIndex];
-
-                // Debug.WriteLine("Midpoint index: " + midpointIndex);
                 var isRangeLengthEven = (rangeLength & 1) == 0;
                 rangeLength = halfRangeLength;
 

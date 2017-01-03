@@ -90,7 +90,7 @@
                     // avoid duplicate work as much as possible
                     if (compareFile.IsDone)
                     {
-                        // continue;
+                        continue;
                     }
 
                     var allCompareFileLines = compareFile.CodeLines;
