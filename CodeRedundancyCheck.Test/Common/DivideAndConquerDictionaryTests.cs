@@ -75,18 +75,22 @@ namespace CodeRedundancyCheck.Test.Common
 
             var random = new Random(123);
 
+            int currentValue = int.MinValue;
+
+            var interval = (int)(uint.MaxValue / range.Capacity) - 2;
+
             for (int i = 0; i < range.Capacity; i++)
             {
-                var value = random.Next();              
-                range.Add(value);
+                currentValue += random.Next(1, interval);              
+                range.Add(currentValue);
             }
 
-            var dic1 = new DivideAndConquerDictionary<int>(GetPairFromInts(range));
+            var dic1 = new DivideAndConquerDictionary<int>(GetPairFromInts(range), true);
 
             int result;
 
-            var found1118868921 = dic1.TryGetValue(1118868921, out result);
-            Assert.IsTrue(found1118868921);
+            //var found1118868921 = dic1.TryGetValue(1118868921, out result);
+            //Assert.IsTrue(found1118868921);
 
             var foundz = dic1.TryGetValue(int.MaxValue, out result);
             

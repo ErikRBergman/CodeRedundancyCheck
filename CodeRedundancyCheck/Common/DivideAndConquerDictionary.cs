@@ -27,7 +27,7 @@
             public static IntKeyValuePairComparer Default { get; } = new IntKeyValuePairComparer();
         }
 
-        public DivideAndConquerDictionary(ICollection<KeyValuePair<int, T>> elements)
+        public DivideAndConquerDictionary(ICollection<KeyValuePair<int, T>> elements, bool isSorted = false)
         {
             var length = elements.Count;
             if (length == 0)
@@ -55,7 +55,10 @@
                 this.isPadded = true;
             }
 
-            Array.Sort(itemsArray, IntKeyValuePairComparer.Default);
+            if (isSorted == false)
+            {
+                Array.Sort(itemsArray, IntKeyValuePairComparer.Default);
+            }
 
             if (isEven)
             {
