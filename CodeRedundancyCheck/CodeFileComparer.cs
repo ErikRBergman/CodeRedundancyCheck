@@ -42,23 +42,18 @@
             }
 
             var result = new ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer>(concurrencyLevel, 50000);
-            var innerBlockFilter = new ConcurrentDictionary<CodeBlockLinkKey, bool>(concurrencyLevel, 50000);
-            var blockFilter = new ConcurrentDictionary<long, bool>(concurrencyLevel, 50000);
+            var matchesDone = new bool[codeFileArray.Length, codeFileArray.Length];
 
             var tasks = new Task[concurrencyLevel];
 
             for (int i = 0; i < concurrencyLevel; i++)
             {
-                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result, innerBlockFilter, blockFilter));
+                tasks[i] = Task.Run(() => this.GetMatchesAsync(minimumMatchingLines, codeFileQueue, codeFileArray, result, matchesDone));
             }
 
             await Task.WhenAll(tasks);
 
             return result.Values.SelectMany(v => v.CodeMatches).ToArray();
-
-            return result.Values.SelectMany(v => v.CodeMatches).ToArray();
-
-            ///return result.Values.SelectMany(v => v.CodeMatches).ToArray();
         }
 
         private void GetMatchesAsync(
@@ -66,8 +61,7 @@
             ConcurrentQueue<CodeFile> codeFileQueue,
             CodeFile[] codeFileArray,
             ConcurrentDictionary<CodeMatchContainerKey, CodeMatchContainer> result,
-            ConcurrentDictionary<CodeBlockLinkKey, bool> innerBlockFilter,
-            ConcurrentDictionary<long, bool> blockFilter
+            bool[,] filesCompared
             )
         {
             var sourceLines = new ThinList<CodeLine>(MaxNumberOfLinesInBlock);
@@ -87,11 +81,15 @@
 
                 foreach (var compareFile in codeFileArray)
                 {
-                    // avoid duplicate work as much as possible
-                    if (compareFile.IsDone)
+                    var max = Math.Max(sourceFile.UniqueId, compareFile.UniqueId);
+                    var min = Math.Min(sourceFile.UniqueId, compareFile.UniqueId);
+
+                    if (filesCompared[min, max] == true)
                     {
                         continue;
                     }
+
+                    filesCompared[min, max] = true;
 
                     var allCompareFileLines = compareFile.CodeLines;
                     var allCompareFileLinesCount = allCompareFileLines.Length;
@@ -224,33 +222,6 @@
 
                                 if (matchingLineCount >= minimumMatchingLines)
                                 {
-                                    //var lineSummary = string.Join(",", sourceLines.AsCollection().Select(sl => sl.WashedLineText));
-
-                                    //var lineSummaryResult = 0;
-
-                                    //if (lineSummary
-                                    //    == "using system;,using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
-                                    //{
-                                    //    var xx = 1;
-                                    //    lineSummaryResult = 1;
-                                    //}
-
-                                    //if (lineSummary
-                                    //    == "using system.collections.generic;,using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
-                                    //{
-                                    //    var xx = 1;
-                                    //    lineSummaryResult = 2;
-                                    //}
-
-                                    //// 
-
-                                    //if (lineSummary  == "using system.linq;,using system.text;,using system.windows;,using system.windows.controls;,using system.windows.data;,using system.windows.documents;,using system.windows.input;,using system.windows.media;,using system.windows.media.imaging;,using system.windows.navigation;,using system.windows.shapes;")
-                                    //{
-                                    //    var xx = 1;
-                                    //    lineSummaryResult = 2;
-                                    //}
-
-
                                     // Link to compare line block
                                     var addedSource = sourceLine.AddBlockWithResult(compareFile, compareLines, 0);
 
@@ -304,8 +275,6 @@
                         }
                     }
                 }
-
-                sourceFile.IsDone = true;
             }
         }
     }

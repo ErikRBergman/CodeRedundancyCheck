@@ -92,7 +92,7 @@
             do
             {
                 // for puny ranges
-                if (rangeLength <= 3)
+                if (rangeLength <= 5)
                 {
                     var maxValue = rangeIndex + rangeLength;
 
@@ -112,26 +112,25 @@
                 var halfRangeLength = rangeLength >> 1;
                 var midpointIndex = rangeIndex + halfRangeLength;
                 var midPointKey = this.keys[midpointIndex];
-                var rangeLengthCarry = 1 - (rangeLength & 1);
-                rangeLength = halfRangeLength;
 
                 if (key > midPointKey)
                 {
+                    var rangeLengthCarry = 1 - (rangeLength & 1);
+                    rangeLength = halfRangeLength;
+
                     rangeIndex = midpointIndex + 1;
                     rangeLength -= rangeLengthCarry;
-
-                    continue;
                 }
                 else
                 {
-                    // rangeIndex remains the same
-
-                    // Play around chaning order of the if statements when it's working
                     if (midPointKey == key)
                     {
                         value = this.values[midpointIndex];
                         return true;
                     }
+
+                    // rangeIndex remains the same
+                    rangeLength = halfRangeLength;
                 }
             }
             while (true);
