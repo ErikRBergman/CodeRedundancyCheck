@@ -76,6 +76,8 @@
 
         IEnumerable<int> IReadOnlyDictionary<int, T>.Keys => this.Keys;
 
+        public T[] ValuesArray => this.values;
+
         public IEnumerable<T> Values => this.values;
 
         public bool ContainsKey(int key)
@@ -180,12 +182,13 @@
 
             public void Dispose()
             {
-                
+
             }
 
             public bool MoveNext()
             {
-                return (this.currentItemIndex++) < this.length;
+                this.currentItemIndex++;
+                return this.currentItemIndex < this.length - 1;
             }
 
             public void Reset()

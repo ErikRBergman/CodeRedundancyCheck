@@ -1,4 +1,6 @@
-﻿namespace CodeRedundancyCheck.Model
+﻿using System.Threading;
+
+namespace CodeRedundancyCheck.Model
 {
     using System.Collections.Concurrent;
     using System.Collections.Generic;
@@ -16,6 +18,8 @@
         public int CodeFileLineIndex;
 
         public bool MayStartBlock = false;
+
+        public int IsHandled = 0;
 
         public uint Next4MiniHash;
 
@@ -58,6 +62,8 @@
                 this.writableLine = value;
             }
         }
+
+        public CodeFile CodeFile;
 
         public static CodeLine CreateTargetLine(string targetLineText)
         {

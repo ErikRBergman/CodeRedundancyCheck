@@ -1,4 +1,6 @@
-﻿namespace CodeRedundancyCheck.Common
+﻿using CodeRedundancyCheck.Model;
+
+namespace CodeRedundancyCheck.Common
 {
     using System;
     using System.Collections;
@@ -68,6 +70,14 @@
         {
             var newArray = new T[newCapacity];
             Array.Resize(ref this.array, newCapacity);
+        }
+
+        public void AddRange(IEnumerable<T> collection)
+        {
+            foreach (var item in collection)
+            {
+                this.Add(item);
+            }
         }
     }
 

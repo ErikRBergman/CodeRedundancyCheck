@@ -10,10 +10,10 @@
     {
         public static ICodeLineFilter Singleton { get; } = new CSharpCodeLineFilter();
 
-        private static int endOfBlockHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("}");
-        private static int elseHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("else");
+        private static readonly int EndOfBlockHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("}");
+        private static readonly int ElseHashCode = StringComparer.OrdinalIgnoreCase.GetHashCode("else");
 
-        private static ulong elseBlock = 0;
+        private static readonly ulong ElseBlock;
 
         static unsafe CSharpCodeLineFilter()
         {
@@ -21,14 +21,14 @@
             {
                 fixed (char* valuePtr = "else")
                 {
-                    elseBlock = *(ulong*)valuePtr;
+                    ElseBlock = *(ulong*)valuePtr;
                 }
             }
         }
 
         public bool MayStartBlock(CodeLine codeLine)
         {
-            if (codeLine.WashedLineHashCode == endOfBlockHashCode)
+            if (codeLine.WashedLineHashCode == EndOfBlockHashCode)
             {
                 var washedLine = codeLine.WashedLineText;
                 if (washedLine[0] == '}' && washedLine.Length == 1)
@@ -36,7 +36,7 @@
                     return false;
                 }
             }
-            else if (elseHashCode == codeLine.WashedLineHashCode)
+            else if (ElseHashCode == codeLine.WashedLineHashCode)
             {
                 var washedLine = codeLine.WashedLineText;
                 if (washedLine.Length == 4)
@@ -45,7 +45,7 @@
                     {
                         fixed (char* valuePtr = washedLine)
                         {
-                            if (*(ulong*)valuePtr == elseBlock)
+                            if (*(ulong*)valuePtr == ElseBlock)
                             {
                                 return false;
                             }

@@ -54,7 +54,10 @@ namespace CodeRedundancyCheck.WinForms.UI
 
         private async Task<IReadOnlyCollection<IGrouping<CodeFile, ResultMatch>>> GetDuplicatesAsync()
         {
+            return null;
+
             var codeFileComparer = new CodeFileComparer();
+
 
             var loader = new CodeFileLoader(new CSharpSourceWash(), new CodeFileIndexer(), new CodeFileLineIndexer(), CSharpCodeLineFilter.Singleton);
 
@@ -69,19 +72,19 @@ namespace CodeRedundancyCheck.WinForms.UI
                 codeFiles.Add(file);
             }
 
-            var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.LineCount * c.CodeFileMatches.Count).ToList();
+            //var codeMatches = (await codeFileComparer.GetMatchesAsync(5, codeFiles)).OrderByDescending(c => c.LineCount * c.CodeFileMatches.Count).ToList();
             var commenter = new CodeFileMatchCommenter(new CodeFileLineIndexer());
 
             var commentedMatches = new HashSet<CodeFile>();
 
-            var result = codeMatches.Where(m => m.CodeFileMatches.Values.Count(m2 => m2.CodeFile.Filename.EndsWith("SpecificationController.cs", StringComparison.OrdinalIgnoreCase)) > 1).SelectMany(
-                codeMatch => codeMatch.CodeFileMatches.Values.Select(codeFileMatch => new ResultMatch
-                                                                               {
-                                                                                   CodeMatch = codeMatch,
-                                                                                   CodeFileMatch = codeFileMatch
-                                                                               })).GroupBy(m => m.CodeFileMatch.CodeFile);
+            //var result = codeMatches.Where(m => m.CodeFileMatches.Values.Count(m2 => m2.CodeFile.Filename.EndsWith("SpecificationController.cs", StringComparison.OrdinalIgnoreCase)) > 1).SelectMany(
+            //    codeMatch => codeMatch.CodeFileMatches.Values.Select(codeFileMatch => new ResultMatch
+            //                                                                   {
+            //                                                                       CodeMatch = codeMatch,
+            //                                                                       CodeFileMatch = codeFileMatch
+            //                                                                   })).GroupBy(m => m.CodeFileMatch.CodeFile);
 
-            return result.ToList() as IReadOnlyCollection<IGrouping<CodeFile, ResultMatch>>;
+            //return result.ToList() as IReadOnlyCollection<IGrouping<CodeFile, ResultMatch>>;
 
         }
     }
